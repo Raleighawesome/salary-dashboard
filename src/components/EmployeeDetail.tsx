@@ -298,8 +298,8 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                   <span className={styles.label}>Base Salary:</span>
                   <span className={styles.value}>
                     {(() => {
-                      // Use the properly extracted values from the analysis
-                      const salaryUSD = analysis.salaryAnalysis.currentSalary || 0;
+                      // Use the properly converted USD value for display
+                      const salaryUSD = employee.baseSalaryUSD || 0;
                       const originalCurrency = employee.currency || 'USD';
                       const originalSalary = employee.baseSalary || 0;
                       
@@ -310,8 +310,8 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                       // Always show USD first
                       const usdDisplay = formatCurrencyDisplay(salaryUSD, 'USD');
                       
-                      // If original currency is not USD and we have different values, show original in parentheses
-                      if (originalCurrency !== 'USD' && originalSalary > 0 && Math.abs(originalSalary - salaryUSD) > 1) {
+                      // For non-USD employees, always show original currency in parentheses
+                      if (originalCurrency !== 'USD' && originalSalary > 0) {
                         return (
                           <>
                             {usdDisplay}
@@ -335,21 +335,32 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                     }
                   </span>
                 </div>
-                <div className={styles.marketPosition}>
-                  <span className={styles.label}>Market Position:</span>
-                  <span className={`${styles.value} ${styles[analysis.salaryAnalysis.marketPosition.toLowerCase().replace(' ', '')]}`}>
-                    {analysis.salaryAnalysis.marketPosition}
-                  </span>
-                </div>
-                <div className={styles.salaryGrade}>
-                  <span className={styles.label}>Salary Grade:</span>
+                <div className={styles.lastRaise}>
+                  <span className={styles.label}>Last Raise Received:</span>
                   <span className={styles.value}>
-                    {employee.salaryGrade || 
-                     employee['salary_grade'] || 
-                     employee['grade'] || 
-                     employee['Grade Band'] ||
-                     employee['Compensation Grade Profile'] ||
-                     'Not Available'}
+                    {(() => {
+                      const lastRaiseDate = employee.lastRaiseDate ||
+                        employee['Last salary change date'] ||
+                        employee['last_salary_change_date'] ||
+                        employee['last_raise_date'] ||
+                        employee['Last Raise Date'];
+                      
+                      const formattedDate = EmployeeCalculations.formatDate(lastRaiseDate);
+                      
+                      if (formattedDate === 'Not Available') {
+                        return formattedDate;
+                      }
+                      
+                      // Calculate months since last raise
+                      const parsedDate = EmployeeCalculations.parseDate(lastRaiseDate);
+                      if (parsedDate) {
+                        const now = new Date();
+                        const monthsSince = Math.floor((now.getTime() - parsedDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+                        return `${formattedDate} (${monthsSince} months ago)`;
+                      }
+                      
+                      return formattedDate;
+                    })()}
                   </span>
                 </div>
               </div>

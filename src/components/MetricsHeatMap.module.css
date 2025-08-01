@@ -1,0 +1,490 @@
+/* MetricsHeatMap.module.css */
+
+/* CSS Custom Properties for Heat Map Colors */
+:root {
+  /* Red-Green Scale (for performance, raises, comparatio) */
+  /* Low values = Red, High values = Green */
+  --heat-red-green-1: #fef2f2;   /* Lowest/worst - light red */
+  --heat-red-green-2: #fecaca;   /* Very low - red */
+  --heat-red-green-3: #f87171;   /* Low - medium red */
+  --heat-red-green-4: #ef4444;   /* Below average - red */
+  --heat-red-green-5: #fbbf24;   /* Average - yellow */
+  --heat-red-green-6: #84cc16;   /* Above average - light green */
+  --heat-red-green-7: #22c55e;   /* Good - medium green */
+  --heat-red-green-8: #16a34a;   /* Very good - green */
+  --heat-red-green-9: #15803d;   /* Excellent - dark green */
+  --heat-red-green-10: #065f46;  /* Highest/best - darkest green */
+
+  /* Green-Red Scale (for comparatio, retention risk) */
+  --heat-green-red-1: #065f46;
+  --heat-green-red-2: #047857;
+  --heat-green-red-3: #059669;
+  --heat-green-red-4: #10b981;
+  --heat-green-red-5: #34d399;
+  --heat-green-red-6: #6ee7b7;
+  --heat-green-red-7: #9decf9;
+  --heat-green-red-8: #fecaca;
+  --heat-green-red-9: #f87171;
+  --heat-green-red-10: #dc2626;
+
+  /* Blue-Orange Scale (for time in role) */
+  --heat-blue-orange-1: #eff6ff;
+  --heat-blue-orange-2: #dbeafe;
+  --heat-blue-orange-3: #bfdbfe;
+  --heat-blue-orange-4: #93c5fd;
+  --heat-blue-orange-5: #60a5fa;
+  --heat-blue-orange-6: #3b82f6;
+  --heat-blue-orange-7: #f59e0b;
+  --heat-blue-orange-8: #d97706;
+  --heat-blue-orange-9: #b45309;
+  --heat-blue-orange-10: #92400e;
+}
+
+.metricsHeatMap {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Heat Map Header */
+.heatMapHeader {
+  margin-bottom: 2rem;
+}
+
+.titleSection {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.heatMapTitle {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.heatMapDescription {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 150px;
+}
+
+.controlLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.metricSelect,
+.sortSelect,
+.filterSelect {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: white;
+  color: #374151;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.metricSelect:focus,
+.sortSelect:focus,
+.filterSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Metric Info */
+.metricInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.metricDescription {
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.metricStats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+
+/* Color Legend */
+.colorLegend {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.legendTitle {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.legendScale {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.legendColor {
+  width: 16px;
+  height: 16px;
+  border-radius: 0.25rem;
+  border: 1px solid #e2e8f0;
+}
+
+.legendColor.excellent {
+  background: #10b981;
+}
+
+.legendColor.good {
+  background: #34d399;
+}
+
+.legendColor.fair {
+  background: #fbbf24;
+}
+
+.legendColor.poor {
+  background: #f87171;
+}
+
+.legendColor.noData {
+  background: #f1f5f9;
+}
+
+/* Heat Map Grid */
+.heatMapGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  min-height: 200px;
+}
+
+.employeeCell {
+  position: relative;
+  padding: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 100px;
+}
+
+.employeeCell:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+  z-index: 10;
+}
+
+.employeeCell.excellent {
+  border-color: #10b981;
+}
+
+.employeeCell.good {
+  border-color: #34d399;
+}
+
+.employeeCell.fair {
+  border-color: #fbbf24;
+}
+
+.employeeCell.poor {
+  border-color: #f87171;
+}
+
+.employeeName {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.employeeValue {
+  font-weight: 700;
+  color: #374151;
+  font-size: 1rem;
+}
+
+/* White text for dark backgrounds */
+.whiteText .employeeName,
+.whiteText .employeeValue {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100%);
+  background: #1e293b;
+  color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  z-index: 20;
+  min-width: 200px;
+  pointer-events: none;
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1e293b;
+}
+
+.tooltipHeader {
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tooltipContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.tooltipMetric {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.tooltipFooter {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #64748b;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.emptyTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.emptyDescription {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* Summary Stats */
+.summaryStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.statItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.statValue {
+  font-size: 0.875rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .heatMapGrid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.5rem;
+  }
+  
+  .controls {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .controlGroup {
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .metricsHeatMap {
+    padding: 1.5rem;
+  }
+  
+  .heatMapTitle {
+    font-size: 1.5rem;
+  }
+  
+  .heatMapGrid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+  
+  .employeeCell {
+    padding: 0.75rem;
+    min-height: 80px;
+  }
+  
+  .employeeName {
+    font-size: 0.75rem;
+  }
+  
+  .employeeValue {
+    font-size: 0.875rem;
+  }
+  
+  .metricInfo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .colorLegend {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .legendScale {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .summaryStats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .metricsHeatMap {
+    padding: 1rem;
+  }
+  
+  .heatMapGrid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  
+  .employeeCell {
+    padding: 0.5rem;
+    min-height: 70px;
+  }
+  
+  .employeeName {
+    font-size: 0.7rem;
+  }
+  
+  .employeeValue {
+    font-size: 0.8rem;
+  }
+  
+  .tooltip {
+    min-width: 180px;
+    font-size: 0.8rem;
+  }
+  
+  .summaryStats {
+    grid-template-columns: 1fr;
+  }
+  
+  .controls {
+    padding: 1rem;
+  }
+  
+  .controlGroup {
+    min-width: auto;
+    width: 100%;
+  }
+} 

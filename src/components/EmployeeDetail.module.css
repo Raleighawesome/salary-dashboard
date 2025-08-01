@@ -1,0 +1,802 @@
+/* Employee Detail Modal Styles */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.modalContent {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 1400px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.headerInfo {
+  flex: 1;
+}
+
+.employeeName {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.jobTitle {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.basicInfo {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.location,
+.employeeId,
+.tenure {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.closeButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Content Grid */
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 24px;
+}
+
+.leftColumn,
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Cards */
+.card {
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.cardTitle {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Salary Information */
+.salaryInfo,
+.tenureInfo,
+.performanceInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.currentSalary,
+.comparatio,
+.marketPosition,
+.tenureDetail,
+.performanceDetail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f7fafc;
+}
+
+.currentSalary:last-child,
+.comparatio:last-child,
+.marketPosition:last-child,
+.tenureDetail:last-child,
+.performanceDetail:last-child {
+  border-bottom: none;
+}
+
+/* Talent Actions Expandable Section */
+.talentActionsContainer {
+  margin-top: 16px;
+}
+
+.expandableDetails {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f7fafc;
+}
+
+.detailsSummary {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #4a5568;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.detailsSummary::-webkit-details-marker {
+  display: none;
+}
+
+.detailsSummary::after {
+  content: '▼';
+  font-size: 12px;
+  color: #718096;
+  transition: transform 0.2s ease;
+}
+
+.expandableDetails[open] .detailsSummary::after {
+  transform: rotate(180deg);
+}
+
+.talentActionsContent {
+  padding: 16px;
+  border-top: 1px solid #e2e8f0;
+  background: white;
+  color: #2d3748;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.label {
+  font-weight: 500;
+  color: #4a5568;
+  font-size: 14px;
+}
+
+.value {
+  font-weight: 600;
+  color: #1a202c;
+  font-size: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.originalCurrency {
+  font-size: 13px;
+  color: #718096;
+  font-weight: 400;
+  display: block;
+  margin-top: 4px;
+}
+
+/* Market Position Colors */
+.belowmarket {
+  color: #e53e3e;
+}
+
+.competitive {
+  color: #38a169;
+}
+
+.abovemarket {
+  color: #d69e2e;
+}
+
+/* Salary Grade Range (5.2) */
+.salaryRange {
+  margin-top: 8px;
+}
+
+.rangeBar {
+  margin-bottom: 16px;
+}
+
+.rangeLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #718096;
+}
+
+.rangeVisual {
+  position: relative;
+  height: 24px;
+  margin-bottom: 8px;
+}
+
+.rangeTrack {
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(90deg, #fed7d7 0%, #c6f6d5 50%, #fed7d7 100%);
+  border-radius: 4px;
+  position: relative;
+}
+
+.currentPosition {
+  position: absolute;
+  top: -8px;
+  width: 24px;
+  height: 24px;
+  background: #4299e1;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.4);
+  transform: translateX(-50%);
+}
+
+.rangeValues {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.rangeDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rangeDetail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Position in Range Colors */
+.belowrange {
+  color: #e53e3e;
+}
+
+.low {
+  color: #ed8936;
+}
+
+.target {
+  color: #38a169;
+}
+
+.high {
+  color: #3182ce;
+}
+
+.aboverange {
+  color: #805ad5;
+}
+
+/* Proposed Raise Section */
+.proposedRaise {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.raiseInput {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.editingControls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.editInput {
+  padding: 6px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 120px;
+  transition: border-color 0.2s;
+}
+
+.editInput:focus {
+  outline: none;
+  border-color: #4299e1;
+}
+
+.editSelect {
+  padding: 6px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 180px;
+  transition: border-color 0.2s;
+}
+
+.editSelect:focus {
+  outline: none;
+  border-color: #4299e1;
+}
+
+.displayValue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.displayValue:hover {
+  background: #f7fafc;
+}
+
+.editIcon {
+  opacity: 0.6;
+  font-size: 12px;
+}
+
+.saveButton,
+.cancelButton {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.saveButton {
+  background: #48bb78;
+  color: white;
+}
+
+.saveButton:hover {
+  background: #38a169;
+}
+
+.cancelButton {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.cancelButton:hover {
+  background: #feb2b2;
+}
+
+.raiseCalculations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.calculation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Salary Trend Chart (5.1) */
+.trendChart {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: end;
+  padding: 16px 0;
+  min-height: 120px;
+}
+
+.trendPoint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 60px;
+}
+
+.year {
+  font-size: 12px;
+  font-weight: 600;
+  color: #718096;
+}
+
+.salaryBar {
+  height: 80px;
+  width: 32px;
+  display: flex;
+  align-items: end;
+  margin: 4px 0;
+}
+
+.barFill {
+  width: 100%;
+  background: linear-gradient(180deg, #4299e1 0%, #3182ce 100%);
+  border-radius: 4px 4px 0 0;
+  min-height: 8px;
+  transition: all 0.3s ease;
+}
+
+.salaryValue {
+  font-size: 11px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.increase {
+  font-size: 10px;
+  color: #38a169;
+  font-weight: 600;
+}
+
+/* Tenure Band Colors */
+.new {
+  color: #805ad5;
+}
+
+.developing {
+  color: #3182ce;
+}
+
+.experienced {
+  color: #38a169;
+}
+
+.veteran {
+  color: #d69e2e;
+}
+
+/* Retention Risk */
+.retentionRisk {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.riskScore {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.riskLevel {
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+}
+
+.riskLevel.low {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.riskLevel.medium {
+  background: #faf089;
+  color: #744210;
+}
+
+.riskLevel.high {
+  background: #feb2b2;
+  color: #742a2a;
+}
+
+.riskLevel.critical {
+  background: #fc8181;
+  color: #822727;
+}
+
+.riskPoints {
+  font-size: 12px;
+  color: #718096;
+  font-weight: 500;
+}
+
+.riskBreakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.riskComponent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f7fafc;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.riskFactors h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.riskFactors ul {
+  margin: 0;
+  padding-left: 16px;
+  color: #4a5568;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.riskFactors li {
+  margin-bottom: 4px;
+}
+
+/* AI Recommendation */
+.recommendation {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recommendedRaise,
+.priority {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #e6fffa;
+  border-radius: 8px;
+  border-left: 4px solid #38b2ac;
+}
+
+.priorityLevel {
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+}
+
+.priorityLevel.low {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.priorityLevel.medium {
+  background: #faf089;
+  color: #744210;
+}
+
+.priorityLevel.high {
+  background: #feb2b2;
+  color: #742a2a;
+}
+
+.priorityLevel.critical {
+  background: #fc8181;
+  color: #822727;
+}
+
+.reasoning h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.reasoning ul {
+  margin: 0;
+  padding-left: 16px;
+  color: #4a5568;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.reasoning li {
+  margin-bottom: 4px;
+}
+
+/* Footer */
+.footer {
+  padding: 20px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #f7fafc;
+  border-radius: 0 0 16px 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.applyRecommendation {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.applyRecommendation:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+}
+
+.applyRecommendation:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.applyRecommendation.applied {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  animation: successPulse 0.6s ease-out;
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0.1);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.closeBtn {
+  background: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.closeBtn:hover {
+  background: #cbd5e0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modalContent {
+    max-width: 800px;
+  }
+}
+
+@media (max-width: 768px) {
+  .modalOverlay {
+    padding: 10px;
+  }
+  
+  .modalContent {
+    max-height: 95vh;
+  }
+  
+  .header {
+    padding: 20px;
+  }
+  
+  .employeeName {
+    font-size: 24px;
+  }
+  
+  .basicInfo {
+    gap: 12px;
+  }
+  
+  .contentGrid {
+    padding: 20px;
+    gap: 16px;
+  }
+  
+  .card {
+    padding: 16px;
+  }
+  
+  .trendChart {
+    gap: 8px;
+  }
+  
+  .salaryBar {
+    width: 24px;
+  }
+  
+  .riskBreakdown {
+    grid-template-columns: 1fr;
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+  
+  .applyRecommendation,
+  .closeBtn {
+    width: 100%;
+    text-align: center;
+  }
+} 

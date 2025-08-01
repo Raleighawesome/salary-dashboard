@@ -1,0 +1,389 @@
+/* Dashboard.module.css */
+
+.dashboard {
+  background: white;
+  min-height: 100vh;
+}
+
+/* Dashboard Header */
+.dashboardHeader {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboardHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.headerContent {
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.titleSection {
+  flex: 1;
+  min-width: 300px;
+}
+
+.dashboardTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.dashboardSubtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* Navigation Tabs */
+.dashboardNav {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.navTab {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.navTab:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.navTab.active {
+  background: white;
+  color: #667eea;
+  border-color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.backButton {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Dashboard Content */
+.dashboardContent {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Full width for table view */
+.dashboardContent.fullWidth {
+  max-width: none;
+  padding: 2rem 1rem;
+}
+
+/* Overview View */
+.overviewView {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.budgetSection {
+  background: #f8fafc;
+  border-radius: 1rem;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  /* Ensure budget section uses full available width */
+  width: 100%;
+}
+
+.metricsSection {
+  background: white;
+  border-radius: 1rem;
+  padding: 0;
+}
+
+.heatMapSection {
+  background: white;
+  border-radius: 1rem;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+}
+
+/* Quick Actions */
+.quickActions {
+  background: #f8fafc;
+  border-radius: 1rem;
+  padding: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.quickActions h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+}
+
+.actionButtons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.actionButton {
+  padding: 1rem 1.5rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #64748b;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.actionButton:hover:not(:disabled) {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f1f5f9;
+}
+
+/* Table View */
+.tableView {
+  background: white;
+  border-radius: 1rem;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Details View */
+.detailsView {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+}
+
+.detailsHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.backToOverview {
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backToOverview:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.detailsHeader h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.detailsContent {
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.detailsContent pre {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* Dashboard Footer */
+.dashboardFooter {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 1.5rem 0;
+  margin-top: 2rem;
+}
+
+.footerContent {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Full width footer for table view */
+.footerContent.fullWidth {
+  max-width: none;
+  padding: 0 1rem;
+}
+
+.summaryStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.statLabel {
+  font-weight: 500;
+  color: #64748b;
+}
+
+.statValue {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.statValue.negative {
+  color: #dc2626;
+}
+
+.statValue.warning {
+  color: #d97706;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .headerContent {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .titleSection {
+    min-width: auto;
+  }
+  
+  .dashboardNav {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboardContent {
+    padding: 1rem;
+  }
+  
+  .dashboardContent.fullWidth {
+    padding: 1rem 0.5rem;
+  }
+  
+  .dashboardHeader {
+    padding: 1.5rem 0;
+  }
+  
+  .headerContent {
+    padding: 0 1rem;
+  }
+  
+  .dashboardTitle {
+    font-size: 1.5rem;
+  }
+  
+  .dashboardSubtitle {
+    font-size: 1rem;
+  }
+  
+  .navTab,
+  .backButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .actionButtons {
+    grid-template-columns: 1fr;
+  }
+  
+  .summaryStats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboardNav {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .navTab,
+  .backButton {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .summaryStats {
+    grid-template-columns: 1fr;
+  }
+  
+  .detailsHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+} 

@@ -1,0 +1,856 @@
+/* EmployeeTable.module.css */
+
+.employeeTable {
+  background: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  /* Allow table to use full browser width */
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+/* Table Header */
+.tableHeader {
+  margin-bottom: 2rem;
+}
+
+.titleSection {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.tableTitle {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.tableDescription {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Table Controls */
+.tableControls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.searchSection {
+  flex: 1;
+  min-width: 250px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background: white;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+}
+
+.searchInput::placeholder {
+  color: #9ca3af;
+}
+
+.filterSection,
+.pageSizeSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filterSelect,
+.pageSizeSelect {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: white;
+  color: #374151;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.filterSelect:hover,
+.pageSizeSelect:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.filterSelect:focus,
+.pageSizeSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+}
+
+.pageSizeSection label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+/* Table Stats */
+.tableStats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.statLabel {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.statValue {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* Table Container */
+.tableContainer {
+  /* Allow horizontal scrolling while preserving sticky header */
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+  /* Ensure table container uses full width */
+  width: 100%;
+  min-width: 0; /* Allow container to shrink if needed */
+  /* Make this a positioned container for sticky to work */
+  position: relative;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  table-layout: fixed; /* Use fixed layout for better column control */
+  /* Add horizontal scrolling to table itself */
+  min-width: 1200px; /* Ensure table has minimum width for all columns */
+}
+
+.table thead {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+  /* Use sticky with viewport, not container */
+}
+
+.table th {
+  padding: 1rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+  background: #f8fafc;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Column width optimization */
+.table th:nth-child(1) { width: 14%; } /* Employee */
+.table th:nth-child(2) { width: 11%; } /* Job Title */
+.table th:nth-child(3) { width: 11%; } /* Current Salary */
+.table th:nth-child(4) { width: 10%; } /* Performance */
+.table th:nth-child(5) { width: 8%; }  /* Comparatio */
+.table th:nth-child(6) { width: 10%; } /* Proposed Raise */
+.table th:nth-child(7) { width: 11%; } /* New Salary */
+.table th:nth-child(8) { width: 10%; } /* New Comparatio */
+.table th:nth-child(9) { width: 8%; }  /* % Change */
+.table th:nth-child(10) { width: 7%; } /* Actions */
+
+.sortableHeader {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.sortableHeader:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  position: sticky;
+  top: 0;
+  z-index: 11;
+}
+
+.tableRow {
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.tableRow:hover {
+  background: #f8fafc;
+}
+
+.table td {
+  padding: 1rem 0.75rem;
+  vertical-align: top;
+  border-bottom: 1px solid #f1f5f9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Apply same width constraints to table cells */
+.table td:nth-child(1) { width: 14%; } /* Employee */
+.table td:nth-child(2) { width: 11%; } /* Job Title */
+.table td:nth-child(3) { width: 11%; } /* Current Salary */
+.table td:nth-child(4) { width: 10%; } /* Performance */
+.table td:nth-child(5) { width: 8%; }  /* Comparatio */
+.table td:nth-child(6) { width: 10%; } /* Proposed Raise */
+.table td:nth-child(7) { width: 11%; } /* New Salary */
+.table td:nth-child(8) { width: 10%; } /* New Comparatio */
+.table td:nth-child(9) { width: 8%; }  /* % Change */
+.table td:nth-child(10) { width: 7%; } /* Actions */
+
+/* Employee Cell */
+.employeeCell {
+  min-width: 180px;
+}
+
+.employeeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.employeeName {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.clickableName {
+  cursor: pointer;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+  margin: -0.125rem -0.25rem;
+}
+
+.clickableName:hover {
+  color: #3b82f6;
+  text-decoration: underline;
+  background-color: #f1f5f9;
+}
+
+.employeeId {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* Salary Cell */
+.salaryCell {
+  min-width: 120px;
+}
+
+.salaryInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  position: relative;
+}
+
+.salaryInfo:hover {
+  background: #f8fafc;
+}
+
+.currentSalary {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.originalCurrency {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.currencyDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.primaryCurrency {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Comparatio Cell */
+.comparatioCell {
+  min-width: 100px;
+}
+
+.comparatioValue {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+}
+
+.comparatioBar {
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.comparatioFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.comparatioBar.high .comparatioFill {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.comparatioBar.medium .comparatioFill {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.comparatioBar.low .comparatioFill {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+/* Raise Cell */
+.raiseCell {
+  min-width: 120px;
+}
+
+.raiseInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.raiseAmount {
+  font-weight: 600;
+  color: #10b981;
+}
+
+.raisePercent {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.noRaise {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge.excellent {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge.good {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge.fair {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge.poor {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge.critical {
+  background: #fecaca;
+  color: #7f1d1d;
+}
+
+.badge.low {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge.medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge.high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge.noData {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* Details Button */
+.detailsButton {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.detailsButton:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+/* Policy Violation Styles */
+.tableRow.warning {
+  background: #fef3c7;
+  border-left: 4px solid #f59e0b;
+}
+
+.tableRow.error {
+  background: #fee2e2;
+  border-left: 4px solid #dc2626;
+}
+
+.tableRow.proposedRaise {
+  background: #dbeafe;
+  border-left: 4px solid #3b82f6;
+}
+
+.violationIndicator {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  cursor: help;
+}
+
+/* Inline Editing Styles */
+.raiseCell {
+  min-width: 140px;
+  position: relative;
+}
+
+.raiseInfo {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  position: relative;
+}
+
+.raiseInfo:hover {
+  background: #f8fafc;
+}
+
+.editIcon {
+  opacity: 0;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+  transition: opacity 0.2s ease;
+}
+
+.raiseInfo:hover .editIcon,
+.salaryInfo:hover .editIcon {
+  opacity: 1;
+}
+
+.editingRaise,
+.editingSalary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.currencyLabel {
+  position: absolute;
+  right: 8px;
+  top: 12px;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.percentSign {
+  position: absolute;
+  right: 8px;
+  top: 12px;
+  color: #64748b;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.raiseInput,
+.salaryInput {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #3b82f6;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: white;
+  color: #1e293b;
+}
+
+.raiseInput:focus,
+.salaryInput:focus {
+  outline: none;
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.editingActions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.saveButton, .cancelButton {
+  flex: 1;
+  padding: 0.375rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveButton {
+  background: #10b981;
+  color: white;
+}
+
+.saveButton:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.cancelButton {
+  background: #ef4444;
+  color: white;
+}
+
+.cancelButton:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* New Salary Cell */
+.newSalaryCell {
+  min-width: 120px;
+}
+
+.newComparatioCell {
+  min-width: 100px;
+}
+
+.salaryValue {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.salaryChange {
+  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: 500;
+}
+
+/* Percent Change Cell */
+.percentChangeCell {
+  min-width: 80px;
+  text-align: center;
+}
+
+.percentBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.percentBadge.low {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.percentBadge.medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.percentBadge.high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.noChange {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #64748b;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.emptyTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.emptyDescription {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pageButton {
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #64748b;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.pageNumber {
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #64748b;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 40px;
+  text-align: center;
+}
+
+.pageNumber:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.pageNumber.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .tableControls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .searchSection {
+    min-width: auto;
+  }
+  
+  .tableStats {
+    justify-content: space-around;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .employeeTable {
+    padding: 1.5rem;
+  }
+  
+  .tableTitle {
+    font-size: 1.5rem;
+  }
+  
+  .table {
+    font-size: 0.8rem;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .employeeCell {
+    min-width: 140px;
+  }
+  
+  .salaryCell,
+  .raiseCell {
+    min-width: 100px;
+  }
+  
+  .tableStats {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .stat {
+    justify-content: space-between;
+  }
+  
+  .pagination {
+    gap: 0.25rem;
+  }
+  
+  .pageButton {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  .pageNumber {
+    padding: 0.4rem 0.6rem;
+    min-width: 36px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .employeeTable {
+    padding: 1rem;
+  }
+  
+  .tableContainer {
+    border-radius: 0.5rem;
+  }
+  
+  .table {
+    font-size: 0.75rem;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .employeeCell {
+    min-width: 120px;
+  }
+  
+  .employeeName {
+    font-size: 0.8rem;
+  }
+  
+  .employeeId {
+    font-size: 0.7rem;
+  }
+  
+  .badge {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+  }
+  
+  .detailsButton {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+  }
+  
+  .pageNumbers {
+    display: none;
+  }
+  
+  .pagination {
+    justify-content: space-between;
+    width: 100%;
+  }
+} 

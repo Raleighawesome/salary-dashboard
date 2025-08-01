@@ -230,6 +230,42 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     return ((employee.proposedRaise || 0) / analysis.salaryAnalysis.currentSalary) * 100;
   }, [analysis.salaryAnalysis.currentSalary, employee.proposedRaise]);
 
+  // Get performance badge (matching EmployeeTable logic)
+  const getPerformanceBadge = useCallback((rating: string | number): { text: string; className: string } => {
+    if (!rating) return { text: 'N/A', className: 'noData' };
+    
+    // Handle text-based performance ratings from CSV
+    if (typeof rating === 'string') {
+      const ratingLower = rating.toLowerCase();
+      if (ratingLower.includes('high') || ratingLower.includes('excellent') || ratingLower.includes('impact')) {
+        return { text: rating, className: 'excellent' };
+      }
+      if (ratingLower.includes('successful') || ratingLower.includes('good') || ratingLower.includes('meets')) {
+        return { text: rating, className: 'good' };
+      }
+      if (ratingLower.includes('developing') || ratingLower.includes('fair') || ratingLower.includes('partial')) {
+        return { text: rating, className: 'fair' };
+      }
+      if (ratingLower.includes('evolving')) {
+        return { text: rating, className: 'poor' };
+      }
+      if (ratingLower.includes('poor') || ratingLower.includes('below') || ratingLower.includes('needs')) {
+        return { text: rating, className: 'poor' };
+      }
+      // Default for unknown text ratings
+      return { text: rating, className: 'good' };
+    }
+    
+    // Handle numeric ratings (legacy support)
+    const numRating = Number(rating);
+    if (numRating <= 0) return { text: 'N/A', className: 'noData' };
+    if (numRating >= 4.5) return { text: 'Excellent', className: 'excellent' };
+    if (numRating >= 4.0) return { text: 'Good', className: 'good' };
+    if (numRating >= 3.5) return { text: 'Fair', className: 'fair' };
+    if (numRating >= 3.0) return { text: 'Poor', className: 'poor' };
+    return { text: 'Critical', className: 'critical' };
+  }, []);
+
   // Calculate new comparatio when there's a proposed raise (matching EmployeeTable logic)
   const newComparatio = useMemo(() => {
     const proposedRaise = employee.proposedRaise || 0;
@@ -288,9 +324,9 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
         </div>
 
         <div className={styles.contentGrid}>
-          {/* Left Column: Salary Information */}
+          {/* Left Column */}
           <div className={styles.leftColumn}>
-            {/* Current Compensation Card */}
+            {/* 1. Current Compensation Card */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>💰 Current Compensation</h3>
               <div className={styles.salaryInfo}>
@@ -366,174 +402,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
               </div>
             </div>
 
-            {/* Salary Grade Range (5.2) */}
-            <div className={styles.card}>
-              <h3 className={styles.cardTitle}>📊 Salary Grade Range</h3>
-              <div className={styles.salaryRange}>
-                <div className={styles.rangeBar}>
-                  <div className={styles.rangeLabels}>
-                    <span>Min</span>
-                    <span>Midpoint</span>
-                    <span>Max</span>
-                  </div>
-                  <div className={styles.rangeVisual}>
-                    <div className={styles.rangeTrack}>
-                      <div 
-                        className={styles.currentPosition}
-                        style={{
-                          left: `${Math.max(0, Math.min(100, 
-                            ((analysis.salaryAnalysis.currentSalary - analysis.salaryAnalysis.salaryGradeMin) / 
-                            (analysis.salaryAnalysis.salaryGradeMax - analysis.salaryAnalysis.salaryGradeMin)) * 100
-                          ))}%`
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className={styles.rangeValues}>
-                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMin)}</span>
-                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMid)}</span>
-                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMax)}</span>
-                  </div>
-                </div>
-                <div className={styles.rangeDetails}>
-                  <div className={styles.rangeDetail}>
-                    <span className={styles.label}>Position in Range:</span>
-                    <span className={`${styles.value} ${styles[analysis.salaryAnalysis.positionInRange.toLowerCase().replace(' ', '')]}`}>
-                      {analysis.salaryAnalysis.positionInRange}
-                    </span>
-                  </div>
-                  <div className={styles.rangeDetail}>
-                    <span className={styles.label}>Room for Growth:</span>
-                    <span className={styles.value}>
-                      {formatCurrencyDisplay(analysis.salaryAnalysis.roomForGrowth)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Proposed Raise Section */}
-            <div className={styles.card}>
-              <h3 className={styles.cardTitle}>🎯 Proposed Adjustment</h3>
-              <div className={styles.proposedRaise}>
-                <div className={styles.raiseInput}>
-                  <span className={styles.label}>Proposed Raise:</span>
-                  {isEditingRaise ? (
-                    <div className={styles.editingControls}>
-                      <input
-                        type="number"
-                        value={tempProposedRaise}
-                        onChange={(e) => setTempProposedRaise(Number(e.target.value))}
-                        className={styles.editInput}
-                        min="0"
-                        step="500"
-                      />
-                      <button onClick={handleProposedRaiseSave} className={styles.saveButton}>
-                        ✓
-                      </button>
-                      <button onClick={handleProposedRaiseCancel} className={styles.cancelButton}>
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <div className={styles.displayValue} onClick={handleProposedRaiseEdit}>
-                      <span className={styles.value}>
-                        {formatCurrencyDisplay(employee.proposedRaise || 0)}
-                      </span>
-                      <span className={styles.editIcon}>✏️</span>
-                    </div>
-                  )}
-                </div>
-                
-                {(employee.proposedRaise || 0) > 0 && (
-                  <div className={styles.raiseCalculations}>
-                    <div className={styles.calculation}>
-                      <span className={styles.label}>New Salary:</span>
-                      <span className={styles.value}>
-                        {formatCurrencyDisplay(newSalary)}
-                      </span>
-                    </div>
-                    <div className={styles.calculation}>
-                      <span className={styles.label}>Percent Increase:</span>
-                      <span className={styles.value}>
-                        {EmployeeCalculations.formatPercentage(newSalaryPercent)}
-                      </span>
-                    </div>
-                    <div className={styles.calculation}>
-                      <span className={styles.label}>New Comparatio:</span>
-                      <span className={styles.value}>
-                        {newComparatio > 0 
-                          ? EmployeeCalculations.formatPercentage(newComparatio)
-                          : 'Not Available'
-                        }
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-
-          </div>
-
-          {/* Right Column: Performance & Risk */}
-          <div className={styles.rightColumn}>
-            {/* Performance & Impact */}
-            <div className={styles.card}>
-              <h3 className={styles.cardTitle}>⭐ Performance & Impact</h3>
-              <div className={styles.performanceInfo}>
-                <div className={styles.performanceDetail}>
-                  <span className={styles.label}>Overall Performance Rating:</span>
-                  <span className={styles.value}>
-                    {employee.performanceRating || 
-                     employee['CALIBRATED VALUE: Overall Performance Rating'] ||
-                     employee['calibrated value: overall performance rating'] ||
-                     'Not Available'}
-                  </span>
-                </div>
-                
-                <div className={styles.performanceDetail}>
-                  <span className={styles.label}>Future:</span>
-                  <span className={styles.value}>
-                    {employee.futuretalent || 
-                     employee['CALIBRATED VALUE: Identified as Future Talent?'] ||
-                     employee['calibrated value: identified as future talent?'] ||
-                     'Not Specified'}
-                  </span>
-                </div>
-
-                <div className={styles.performanceDetail}>
-                  <span className={styles.label}>Movement Readiness:</span>
-                  <span className={styles.value}>
-                    {employee.movementReadiness || 
-                     employee['CALIBRATED VALUE: Movement Readiness'] ||
-                     employee['calibrated value: movement readiness'] ||
-                     'Not Specified'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Expandable Proposed Talent Actions */}
-              {(employee.proposedTalentActions || 
-                employee['CALIBRATED VALUE: Proposed Talent Actions'] ||
-                employee['calibrated value: proposed talent actions']) && (
-                <div className={styles.talentActionsContainer}>
-                  <details className={styles.expandableDetails}>
-                    <summary className={styles.detailsSummary}>
-                      💡 Proposed Talent Actions
-                    </summary>
-                    <div className={styles.talentActionsContent}>
-                      {employee.proposedTalentActions || 
-                       employee['CALIBRATED VALUE: Proposed Talent Actions'] ||
-                       employee['calibrated value: proposed talent actions'] ||
-                       'No actions specified'}
-                    </div>
-                  </details>
-                </div>
-              )}
-            </div>
-
-            {/* Tenure & Experience Information */}
+            {/* 3. Tenure & Experience Card */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>🕒 Tenure & Experience</h3>
               <div className={styles.tenureInfo}>
@@ -597,7 +466,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
               </div>
             </div>
 
-            {/* Retention Risk Analysis (5.5) */}
+            {/* 5. Retention Risk Analysis Card */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>⚠️ Retention Risk Analysis</h3>
               <div className={styles.retentionRisk}>
@@ -641,7 +510,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
               </div>
             </div>
 
-            {/* AI Recommendation */}
+            {/* 7. AI Recommendation Card */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>🤖 AI Recommendation</h3>
               <div className={styles.recommendation}>
@@ -693,6 +562,181 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                     ))}
                   </ul>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className={styles.rightColumn}>
+            {/* 2. Performance & Impact Card */}
+            <div className={styles.card}>
+              <h3 className={styles.cardTitle}>⭐ Performance & Impact</h3>
+              <div className={styles.performanceInfo}>
+                <div className={styles.performanceDetail}>
+                  <span className={styles.label}>Overall Performance Rating:</span>
+                  <span className={styles.value}>
+                    {(() => {
+                      const rating = employee.performanceRating || 
+                        employee['CALIBRATED VALUE: Overall Performance Rating'] ||
+                        employee['calibrated value: overall performance rating'] ||
+                        'Not Available';
+                      
+                      const performanceBadge = getPerformanceBadge(rating);
+                      
+                      return (
+                        <span className={`${styles.badge} ${styles[performanceBadge.className]}`}>
+                          {rating}
+                        </span>
+                      );
+                    })()}
+                  </span>
+                </div>
+                
+                <div className={styles.performanceDetail}>
+                  <span className={styles.label}>Future:</span>
+                  <span className={styles.value}>
+                    {employee.futuretalent || 
+                     employee['CALIBRATED VALUE: Identified as Future Talent?'] ||
+                     employee['calibrated value: identified as future talent?'] ||
+                     'Not Specified'}
+                  </span>
+                </div>
+
+                <div className={styles.performanceDetail}>
+                  <span className={styles.label}>Movement Readiness:</span>
+                  <span className={styles.value}>
+                    {employee.movementReadiness || 
+                     employee['CALIBRATED VALUE: Movement Readiness'] ||
+                     employee['calibrated value: movement readiness'] ||
+                     'Not Specified'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Expandable Proposed Talent Actions */}
+              {(employee.proposedTalentActions || 
+                employee['CALIBRATED VALUE: Proposed Talent Actions'] ||
+                employee['calibrated value: proposed talent actions']) && (
+                <div className={styles.talentActionsContainer}>
+                  <details className={styles.expandableDetails} open>
+                    <summary className={styles.detailsSummary}>
+                      💡 Proposed Talent Actions
+                    </summary>
+                    <div className={styles.talentActionsContent}>
+                      {employee.proposedTalentActions || 
+                       employee['CALIBRATED VALUE: Proposed Talent Actions'] ||
+                       employee['calibrated value: proposed talent actions'] ||
+                       'No actions specified'}
+                    </div>
+                  </details>
+                </div>
+              )}
+            </div>
+
+            {/* 4. Salary Grade Range Card */}
+            <div className={styles.card}>
+              <h3 className={styles.cardTitle}>📊 Salary Grade Range</h3>
+              <div className={styles.salaryRange}>
+                <div className={styles.rangeBar}>
+                  <div className={styles.rangeLabels}>
+                    <span>Min</span>
+                    <span>Midpoint</span>
+                    <span>Max</span>
+                  </div>
+                  <div className={styles.rangeVisual}>
+                    <div className={styles.rangeTrack}>
+                      <div 
+                        className={styles.currentPosition}
+                        style={{
+                          left: `${Math.max(0, Math.min(100, 
+                            ((analysis.salaryAnalysis.currentSalary - analysis.salaryAnalysis.salaryGradeMin) / 
+                            (analysis.salaryAnalysis.salaryGradeMax - analysis.salaryAnalysis.salaryGradeMin)) * 100
+                          ))}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.rangeValues}>
+                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMin)}</span>
+                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMid)}</span>
+                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMax)}</span>
+                  </div>
+                </div>
+                <div className={styles.rangeDetails}>
+                  <div className={styles.rangeDetail}>
+                    <span className={styles.label}>Position in Range:</span>
+                    <span className={`${styles.value} ${styles[analysis.salaryAnalysis.positionInRange.toLowerCase().replace(' ', '')]}`}>
+                      {analysis.salaryAnalysis.positionInRange}
+                    </span>
+                  </div>
+                  <div className={styles.rangeDetail}>
+                    <span className={styles.label}>Room for Growth:</span>
+                    <span className={styles.value}>
+                      {formatCurrencyDisplay(analysis.salaryAnalysis.roomForGrowth)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 6. Proposed Adjustment Card */}
+            <div className={styles.card}>
+              <h3 className={styles.cardTitle}>🎯 Proposed Adjustment</h3>
+              <div className={styles.proposedRaise}>
+                <div className={styles.raiseInput}>
+                  <span className={styles.label}>Proposed Raise:</span>
+                  {isEditingRaise ? (
+                    <div className={styles.editingControls}>
+                      <input
+                        type="number"
+                        value={tempProposedRaise}
+                        onChange={(e) => setTempProposedRaise(Number(e.target.value))}
+                        className={styles.editInput}
+                        min="0"
+                        step="500"
+                      />
+                      <button onClick={handleProposedRaiseSave} className={styles.saveButton}>
+                        ✓
+                      </button>
+                      <button onClick={handleProposedRaiseCancel} className={styles.cancelButton}>
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={styles.displayValue} onClick={handleProposedRaiseEdit}>
+                      <span className={styles.value}>
+                        {formatCurrencyDisplay(employee.proposedRaise || 0)}
+                      </span>
+                      <span className={styles.editIcon}>✏️</span>
+                    </div>
+                  )}
+                </div>
+                
+                {(employee.proposedRaise || 0) > 0 && (
+                  <div className={styles.raiseCalculations}>
+                    <div className={styles.calculation}>
+                      <span className={styles.label}>New Salary:</span>
+                      <span className={styles.value}>
+                        {formatCurrencyDisplay(newSalary)}
+                      </span>
+                    </div>
+                    <div className={styles.calculation}>
+                      <span className={styles.label}>Percent Increase:</span>
+                      <span className={styles.value}>
+                        {EmployeeCalculations.formatPercentage(newSalaryPercent)}
+                      </span>
+                    </div>
+                    <div className={styles.calculation}>
+                      <span className={styles.label}>New Comparatio:</span>
+                      <span className={styles.value}>
+                        {newComparatio > 0 
+                          ? EmployeeCalculations.formatPercentage(newComparatio)
+                          : 'Not Available'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

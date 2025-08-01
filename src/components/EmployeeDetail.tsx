@@ -84,7 +84,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
 
     const comparatio = extractFieldValue([
       'comparatio', 'Comparatio', 'comp_ratio', 'comparatio_percent'
-    ], salaryGradeMid > 0 ? Math.round((baseSalaryUSD / salaryGradeMid) * 100) : 0);
+    ], salaryGradeMid > 0 ? Math.round((baseSalary / salaryGradeMid) * 100) : 0);
 
     const performanceRating = extractFieldValue([
       'performanceRating', 'performance_rating', 'rating', 'performance',
@@ -229,6 +229,28 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     if (analysis.salaryAnalysis.currentSalary === 0) return 0;
     return ((employee.proposedRaise || 0) / analysis.salaryAnalysis.currentSalary) * 100;
   }, [analysis.salaryAnalysis.currentSalary, employee.proposedRaise]);
+
+  // Calculate new comparatio when there's a proposed raise (matching EmployeeTable logic)
+  const newComparatio = useMemo(() => {
+    const proposedRaise = employee.proposedRaise || 0;
+    if (proposedRaise <= 0) return 0;
+    
+    // Use the same logic as EmployeeTable - calculate using original currency
+    const currentSalaryOriginal = employee.baseSalary || 0;
+    const salaryGradeMid = employee.salaryGradeMid || analysis.salaryAnalysis.salaryGradeMid || 0;
+    
+    if (salaryGradeMid <= 0 || currentSalaryOriginal <= 0) return 0;
+    
+    // Convert USD raise amount to original currency (matching EmployeeTable.tsx lines 294-296)
+    const currencyConversionRate = currentSalaryOriginal / (employee.baseSalaryUSD || currentSalaryOriginal);
+    const proposedRaiseOriginalCurrency = proposedRaise * currencyConversionRate;
+    
+    // Calculate new salary in original currency  
+    const newSalaryOriginal = currentSalaryOriginal + proposedRaiseOriginalCurrency;
+    
+    // Calculate comparatio using original currency values (matching EmployeeTable.tsx line 302)
+    return Math.round((newSalaryOriginal / salaryGradeMid) * 100);
+  }, [employee.proposedRaise, employee.baseSalary, employee.baseSalaryUSD, employee.salaryGradeMid, analysis.salaryAnalysis.salaryGradeMid]);
 
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
@@ -424,6 +446,15 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                       <span className={styles.label}>Percent Increase:</span>
                       <span className={styles.value}>
                         {EmployeeCalculations.formatPercentage(newSalaryPercent)}
+                      </span>
+                    </div>
+                    <div className={styles.calculation}>
+                      <span className={styles.label}>New Comparatio:</span>
+                      <span className={styles.value}>
+                        {newComparatio > 0 
+                          ? EmployeeCalculations.formatPercentage(newComparatio)
+                          : 'Not Available'
+                        }
                       </span>
                     </div>
                   </div>

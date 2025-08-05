@@ -175,7 +175,10 @@ export const ModernSelect: React.FC<ModernSelectProps> = ({
                 ${highlightedIndex === index ? styles.highlighted : ''} 
                 ${value === option.value ? styles.selected : ''}
               `}
-              onClick={() => selectOption(option.value)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                selectOption(option.value);
+              }}
               role="option"
               aria-selected={value === option.value}
             >

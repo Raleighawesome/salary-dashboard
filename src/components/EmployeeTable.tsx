@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import styles from './EmployeeTable.module.css';
+import { ModernSelect } from './ModernSelect';
 import { PolicyValidator } from '../utils/policyValidation';
 
 interface EmployeeTableProps {
@@ -13,6 +14,21 @@ interface EmployeeTableProps {
 
 type SortField = 'name' | 'baseSalaryUSD' | 'performanceRating' | 'comparatio' | 'proposedRaise' | 'managerName';
 type SortDirection = 'asc' | 'desc';
+
+// Options for ModernSelect components
+const FILTER_OPTIONS = [
+  { value: 'all', label: 'All Employees', icon: '👥' },
+  { value: 'withRaises', label: 'With Proposed Raises', icon: '💰' },
+  { value: 'highPerformers', label: 'High Performers', icon: '⭐' },
+  { value: 'atRisk', label: 'At Risk', icon: '⚠️' }
+];
+
+const PAGE_SIZE_OPTIONS = [
+  { value: '10', label: '10 per page', icon: '📋' },
+  { value: '25', label: '25 per page', icon: '📄' },
+  { value: '50', label: '50 per page', icon: '📑' },
+  { value: '100', label: '100 per page', icon: '📚' }
+];
 
 export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   employeeData,
@@ -260,6 +276,16 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
     return Array.from(managers).sort();
   }, [employeeData]);
 
+  // Create manager options for ModernSelect
+  const managerOptions = useMemo(() => [
+    { value: 'all', label: 'All Managers', icon: '👥' },
+    ...uniqueManagers.map(manager => ({
+      value: manager,
+      label: manager,
+      icon: '👤'
+    }))
+  ], [uniqueManagers]);
+
   // Get policy violations for an employee
   const getEmployeeViolations = useCallback((employee: any) => {
     const violations = PolicyValidator.validateEmployee(employee);
@@ -400,20 +426,20 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   }, []);
 
   // Handle filter change
-  const handleFilterChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFilterBy(e.target.value as any);
+  const handleFilterChange = useCallback((value: string) => {
+    setFilterBy(value as any);
     setCurrentPage(1); // Reset to first page when filtering
   }, []);
 
   // Handle manager filter change
-  const handleManagerFilterChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setManagerFilter(e.target.value);
+  const handleManagerFilterChange = useCallback((value: string) => {
+    setManagerFilter(value);
     setCurrentPage(1); // Reset to first page when filtering
   }, []);
 
   // Handle page size change
-  const handlePageSizeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPageSize(parseInt(e.target.value));
+  const handlePageSizeChange = useCallback((value: string) => {
+    setPageSize(parseInt(value));
     setCurrentPage(1); // Reset to first page when changing page size
   }, []);
 
@@ -446,45 +472,33 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
           </div>
 
           <div className={styles.filterSection}>
-            <select
+            <ModernSelect
               value={filterBy}
               onChange={handleFilterChange}
+              options={FILTER_OPTIONS}
+              variant="compact"
               className={styles.filterSelect}
-            >
-              <option value="all">All Employees</option>
-              <option value="withRaises">With Proposed Raises</option>
-              <option value="highPerformers">High Performers</option>
-              <option value="atRisk">At Risk</option>
-            </select>
+            />
           </div>
 
           <div className={styles.filterSection}>
-            <select
+            <ModernSelect
               value={managerFilter}
               onChange={handleManagerFilterChange}
+              options={managerOptions}
+              variant="compact"
               className={styles.filterSelect}
-            >
-              <option value="all">All Managers</option>
-              {uniqueManagers.map(manager => (
-                <option key={manager} value={manager}>
-                  {manager}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className={styles.pageSizeSection}>
-            <label>Show:</label>
-            <select
-              value={pageSize}
+            <ModernSelect
+              value={pageSize.toString()}
               onChange={handlePageSizeChange}
+              options={PAGE_SIZE_OPTIONS}
+              variant="compact"
               className={styles.pageSizeSelect}
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
+            />
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import styles from './MetricsHeatMap.module.css';
+import { ModernSelect } from './ModernSelect';
 
 interface EmployeeMetric {
   id: string;
@@ -69,6 +70,26 @@ const METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     thresholds: { excellent: 8, good: 5, fair: 3, poor: 1 },
   },
 };
+
+// Options for ModernSelect components
+const METRIC_OPTIONS = Object.entries(METRIC_CONFIGS).map(([key, config]) => ({
+  value: key,
+  label: config.label,
+  icon: key === 'comparatio' ? '📊' : key === 'performanceRating' ? '⭐' : key === 'timeInRole' ? '⏰' : key === 'retentionRisk' ? '⚠️' : '💰'
+}));
+
+const SORT_OPTIONS = [
+  { value: 'metric', label: 'By Metric Value', icon: '📈' },
+  { value: 'name', label: 'By Name', icon: '🔤' }
+];
+
+const FILTER_OPTIONS = [
+  { value: 'all', label: 'All Employees', icon: '👥' },
+  { value: 'poor', label: 'Needs Attention', icon: '🔴' },
+  { value: 'fair', label: 'Fair Performance', icon: '🟡' },
+  { value: 'good', label: 'Good Performance', icon: '🟢' },
+  { value: 'excellent', label: 'Excellent Performance', icon: '🌟' }
+];
 
 export const MetricsHeatMap: React.FC<MetricsHeatMapProps> = ({
   employeeMetrics,
@@ -304,45 +325,36 @@ export const MetricsHeatMap: React.FC<MetricsHeatMapProps> = ({
         {/* Controls */}
         <div className={styles.controls}>
           <div className={styles.controlGroup}>
-            <label className={styles.controlLabel}>Metric:</label>
-            <select
+            <ModernSelect
               value={selectedMetric}
-              onChange={(e) => handleMetricChange(e.target.value)}
+              onChange={handleMetricChange}
+              options={METRIC_OPTIONS}
+              label="Metric"
+              variant="compact"
               className={styles.metricSelect}
-            >
-              {Object.entries(METRIC_CONFIGS).map(([key, config]) => (
-                <option key={key} value={key}>
-                  {config.label}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className={styles.controlGroup}>
-            <label className={styles.controlLabel}>Sort:</label>
-            <select
+            <ModernSelect
               value={sortBy}
-              onChange={(e) => handleSortChange(e.target.value)}
+              onChange={handleSortChange}
+              options={SORT_OPTIONS}
+              label="Sort"
+              variant="compact"
               className={styles.sortSelect}
-            >
-              <option value="metric">By Metric Value</option>
-              <option value="name">By Name</option>
-            </select>
+            />
           </div>
 
           <div className={styles.controlGroup}>
-            <label className={styles.controlLabel}>Filter:</label>
-            <select
+            <ModernSelect
               value={filterThreshold}
-              onChange={(e) => handleFilterChange(e.target.value)}
+              onChange={handleFilterChange}
+              options={FILTER_OPTIONS}
+              label="Filter"
+              variant="compact"
               className={styles.filterSelect}
-            >
-              <option value="all">All Employees</option>
-              <option value="poor">Needs Attention</option>
-              <option value="fair">Fair Performance</option>
-              <option value="good">Good Performance</option>
-              <option value="excellent">Excellent Performance</option>
-            </select>
+            />
           </div>
         </div>
       </div>

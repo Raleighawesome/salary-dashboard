@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import styles from './BudgetInput.module.css';
+import { ModernSelect } from './ModernSelect';
 
 interface BudgetInputProps {
   initialBudget: number;
@@ -22,6 +23,13 @@ const COMMON_CURRENCIES = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
   { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
 ];
+
+// Convert currencies to options format for ModernSelect
+const CURRENCY_OPTIONS = COMMON_CURRENCIES.map(curr => ({
+  value: curr.code,
+  label: `${curr.code} (${curr.symbol})`,
+  icon: curr.symbol
+}));
 
 export const BudgetInput: React.FC<BudgetInputProps> = ({
   initialBudget,
@@ -78,8 +86,7 @@ export const BudgetInput: React.FC<BudgetInputProps> = ({
   }, [validateBudget]);
 
   // Handle currency change
-  const handleCurrencyChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCurrency = e.target.value;
+  const handleCurrencyChange = useCallback((newCurrency: string) => {
     setCurrency(newCurrency);
     
     // If we have a valid budget, update immediately
@@ -159,18 +166,14 @@ export const BudgetInput: React.FC<BudgetInputProps> = ({
             <div className={styles.inputGroup}>
               <label className={styles.label}>Total Budget:</label>
               <div className={styles.inputRow}>
-                <select
+                <ModernSelect
                   value={currency}
                   onChange={handleCurrencyChange}
-                  className={styles.currencySelect}
+                  options={CURRENCY_OPTIONS}
                   disabled={!isEditing}
-                >
-                  {COMMON_CURRENCIES.map(curr => (
-                    <option key={curr.code} value={curr.code}>
-                      {curr.code} ({curr.symbol})
-                    </option>
-                  ))}
-                </select>
+                  variant="compact"
+                  className={styles.currencySelect}
+                />
                 
                 <input
                   type="number"

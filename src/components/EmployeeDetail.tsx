@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { EmployeeCalculations } from '../utils/calculations';
 import styles from './EmployeeDetail.module.css';
 
@@ -41,6 +41,16 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
   const [isEditingRaise, setIsEditingRaise] = useState(false);
   const [tempProposedRaise, setTempProposedRaise] = useState(employee.proposedRaise || 0);
   const [aiRecommendationApplied, setAiRecommendationApplied] = useState(false);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
 
   // Calculate comprehensive employee analysis
   const analysis = useMemo(() => {
@@ -185,20 +195,22 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
         return;
       }
 
-      // Log with USD first, local currency in parentheses if different
+      // Convert to employee's local currency for proposedRaise
       const employeeCurrency = employee.currency || 'USD';
-      let logMessage = `🤖 Applying AI recommendation: ${formatCurrencyDisplay(recommendedAmount, 'USD')}`;
+      let proposedRaiseAmount = recommendedAmount; // Default to USD
       
       if (employeeCurrency !== 'USD' && employee.baseSalary && employee.baseSalaryUSD && employee.baseSalaryUSD > 0) {
+        // Calculate conversion rate from USD to local currency
         const conversionRate = employee.baseSalary / employee.baseSalaryUSD;
-        const localAmount = recommendedAmount * conversionRate;
-        logMessage += ` (${formatCurrencyDisplay(localAmount, employeeCurrency)})`;
+        proposedRaiseAmount = Math.round(recommendedAmount * conversionRate);
+        
+        console.log(`🤖 Applying AI recommendation: ${formatCurrencyDisplay(recommendedAmount, 'USD')} → ${formatCurrencyDisplay(proposedRaiseAmount, employeeCurrency)}`);
+      } else {
+        console.log(`🤖 Applying AI recommendation: ${formatCurrencyDisplay(recommendedAmount, 'USD')}`);
       }
       
-  
-      
-      onEmployeeUpdate(employee.employeeId || employee.id, { proposedRaise: recommendedAmount });
-      setTempProposedRaise(recommendedAmount);
+      onEmployeeUpdate(employee.employeeId || employee.id, { proposedRaise: proposedRaiseAmount });
+      setTempProposedRaise(proposedRaiseAmount);
       setIsEditingRaise(false);
       
       // Show success indicator
@@ -212,7 +224,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     } catch (error) {
       console.error('Error applying AI recommendation:', error);
     }
-  }, [analysis.raiseRecommendation.recommendedAmount, employee.employeeId, employee.id, onEmployeeUpdate]);
+  }, [analysis.raiseRecommendation.recommendedAmount, employee.employeeId, employee.id, employee.currency, employee.baseSalary, employee.baseSalaryUSD, onEmployeeUpdate, budgetCurrency]);
 
   // Format currency display (5.4)
   const formatCurrencyDisplay = useCallback((amount: number, currency?: string) => {
@@ -529,10 +541,10 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                       // Always show USD first
                       const usdDisplay = `${formatCurrencyDisplay(recommendedAmountUSD, 'USD')} (${EmployeeCalculations.formatPercentage(percent)})`;
                       
-                      // If employee currency is not USD, show original currency in parentheses
+                      // If employee currency is not USD, show local currency in parentheses
                       if (employeeCurrency !== 'USD' && employee.baseSalary && employee.baseSalaryUSD && employee.baseSalaryUSD > 0) {
                         const conversionRate = employee.baseSalary / employee.baseSalaryUSD;
-                        const recommendedAmountLocal = recommendedAmountUSD * conversionRate;
+                        const recommendedAmountLocal = Math.round(recommendedAmountUSD * conversionRate);
                         
                         return (
                           <>

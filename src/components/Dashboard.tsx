@@ -31,9 +31,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   
   // View state
-  const [currentView, setCurrentView] = useState<'overview' | 'table' | 'details'>('overview');
+  const [currentView, setCurrentView] = useState<'overview' | 'table'>('overview');
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
-  const [previousView, setPreviousView] = useState<'overview' | 'table'>('overview');
   
   // Export and validation state
   const [showPolicyAlert, setShowPolicyAlert] = useState(false);
@@ -116,8 +115,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   // Handle employee selection for details view
   const handleEmployeeSelect = useCallback((employee: any) => {
-    // Store the current view as previous view before switching to details
-    setPreviousView(currentView as 'overview' | 'table');
     
     // Check if this is a limited EmployeeMetric object from the heat map
     // (it will only have id, name, comparatio, etc. but not full employee data)
@@ -143,28 +140,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
       // This is already a full employee object (from employee table)
       setSelectedEmployee(employee);
     }
-    
-    setCurrentView('details');
-  }, [employeeData, currentView]);
+  }, [employeeData]);
 
   // Navigation handlers
   const switchToOverview = useCallback(() => {
     setCurrentView('overview');
     setSelectedEmployee(null);
-    setPreviousView('overview');
   }, []);
 
   const switchToTable = useCallback(() => {
     setCurrentView('table');
     setSelectedEmployee(null);
-    setPreviousView('table');
   }, []);
 
-  // Handle closing detail view - return to previous view
+  // Handle closing detail view
   const handleCloseDetails = useCallback(() => {
-    setCurrentView(previousView);
     setSelectedEmployee(null);
-  }, [previousView]);
+  }, []);
 
   // Handle policy validation
   const handleValidatePolicies = useCallback(() => {
@@ -396,7 +388,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         )}
 
-        {currentView === 'details' && selectedEmployee && (
+        {selectedEmployee && (
           <EmployeeDetail
             employee={selectedEmployee}
             onClose={handleCloseDetails}

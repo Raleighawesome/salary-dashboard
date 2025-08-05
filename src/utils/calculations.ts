@@ -364,7 +364,9 @@ export class EmployeeCalculations {
     // Cap at budget constraints
     recommendedPercent = Math.min(recommendedPercent, budgetConstraints.maxPercent);
     
-    const recommendedAmount = Math.round((salaryAnalysis.currentSalary * recommendedPercent) / 100);
+    // Use USD salary for raise calculation to ensure budget consistency
+    const usdSalary = employee.baseSalaryUSD || employee.baseSalary || salaryAnalysis.currentSalary;
+    const recommendedAmount = Math.round((usdSalary * recommendedPercent) / 100);
 
     // Determine priority
     let priority: 'Low' | 'Medium' | 'High' | 'Critical';

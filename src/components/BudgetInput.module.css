@@ -100,6 +100,7 @@
   border-radius: 0.5rem;
   font-size: 1rem;
   font-weight: 500;
+  color: #374151;
   transition: all 0.2s ease;
   min-width: 200px;
 }

@@ -335,7 +335,7 @@ function App() {
       )}
 
       {/* Main Content */}
-      <main className="app-main">
+      <main className={`app-main ${currentView === 'dashboard' ? 'dashboard-main' : ''}`}>
         {currentView === 'upload' ? (
           <div className="upload-view">
             <div className="view-header">

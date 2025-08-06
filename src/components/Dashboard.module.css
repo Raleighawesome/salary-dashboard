@@ -195,7 +195,7 @@
 .tableView {
   background: white;
   border-radius: 1rem;
-  overflow: hidden;
+  /* Remove overflow: hidden to allow sticky headers to work */
   width: 100%;
 }
 

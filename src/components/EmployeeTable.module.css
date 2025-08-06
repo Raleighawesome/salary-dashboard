@@ -150,14 +150,14 @@
 .tableContainer {
   /* Allow horizontal scrolling while preserving sticky header */
   overflow-x: auto;
+  /* Remove overflow-y to allow sticky headers to stick to viewport */
   border: 1px solid #e2e8f0;
   border-radius: 0.75rem;
   margin-bottom: 1.5rem;
   /* Ensure table container uses full width */
   width: 100%;
   min-width: 0; /* Allow container to shrink if needed */
-  /* Make this a positioned container for sticky to work */
-  position: relative;
+  /* Don't use relative positioning that could interfere with sticky */
 }
 
 .table {
@@ -170,9 +170,8 @@
 }
 
 .table thead {
-  background: #f8fafc;
+  /* Remove background here since it's set on th */
   border-bottom: 2px solid #e2e8f0;
-  /* Use sticky with viewport, not container */
 }
 
 .table th {
@@ -185,8 +184,13 @@
   background: #f8fafc;
   position: sticky;
   top: 0;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  /* Ensure header sticks to viewport, not container */
+  backdrop-filter: blur(10px);
+  /* Force hardware acceleration */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 /* Column width optimization */
@@ -212,7 +216,9 @@
   color: #1e293b;
   position: sticky;
   top: 0;
-  z-index: 11;
+  z-index: 1001;
+  backdrop-filter: blur(10px);
+  transform: translateZ(0);
 }
 
 .tableRow {

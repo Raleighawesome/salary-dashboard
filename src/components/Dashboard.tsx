@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import type { FileUploadResult, PolicyViolation } from '../types/employee';
 import { BudgetInput } from './BudgetInput';
+import { BudgetSummary } from './BudgetSummary';
 import { MetricsCards } from './MetricsCards';
 import { MetricsHeatMap } from './MetricsHeatMap';
 import { EmployeeTable } from './EmployeeTable';
@@ -313,7 +314,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Main Dashboard Content */}
-      <div className={`${styles.dashboardContent} ${currentView === 'table' ? styles.fullWidth : ''}`}>
+      <div className={`${styles.dashboardContent} ${styles.fullWidth}`}>
         {currentView === 'overview' && (
           <div className={styles.overviewView}>
             {/* Budget Input Section */}
@@ -377,6 +378,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {currentView === 'table' && (
           <div className={styles.tableView}>
+            <BudgetSummary
+              totalBudget={totalBudget}
+              currentUsage={budgetMetrics.totalProposedRaises}
+              currency={budgetCurrency}
+            />
             <EmployeeTable
               employeeData={employeeData}
               onEmployeeSelect={handleEmployeeSelect}

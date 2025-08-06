@@ -165,6 +165,13 @@ body {
   width: 100%;
 }
 
+/* Dashboard view uses full width */
+.app-main.dashboard-main {
+  margin: 0;
+  padding: 0;
+  max-width: none;
+}
+
 /* Upload view gets constrained width */
 .app-main .upload-view {
   max-width: 1400px;
@@ -189,7 +196,7 @@ body {
   background: white;
   border-radius: 1rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  /* Remove overflow: hidden to allow sticky headers to work */
 }
 
 .upload-view {

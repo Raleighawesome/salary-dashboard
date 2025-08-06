@@ -142,6 +142,14 @@ EMP002,3.8,1,9
 - **Export functionality** with customizable formats
 - **Responsive design** optimized for desktop use
 
+## 💱 Currency Conversion
+
+- **Real-time exchange rates** fetched from live APIs during data import
+- **1-hour caching** to ensure current rates while avoiding API limits
+- **Automatic USD conversion** for all foreign currencies (EUR, GBP, INR, etc.)
+- **Fallback rates** used if API is unavailable (static rates from 2024)
+- **Rate refresh** occurs when you re-import data files
+
 ## 🛠️ Technology Stack
 
 - **Frontend**: React 19 + TypeScript

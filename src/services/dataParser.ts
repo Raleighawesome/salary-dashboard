@@ -520,6 +520,9 @@ export class DataParser {
       
       // Log warnings but continue
       const warnings = fileValidationErrors.filter(e => e.severity === 'WARNING');
+      if (warnings.length > 0) {
+        console.warn('File validation warnings:', warnings);
+      }
       // Step 2: Parse file content
       const fileExtension = file.name.split('.').pop()?.toLowerCase();
       let rawData: any[] = [];

@@ -244,9 +244,16 @@ export class DataProcessor {
 
       // Ensure raise calculations are initialized
       enhanced.proposedRaise = enhanced.proposedRaise || 0;
-      enhanced.newSalary = enhanced.baseSalary + (enhanced.proposedRaise || 0);
-      enhanced.percentChange = enhanced.baseSalary > 0 
-        ? Math.round(((enhanced.proposedRaise || 0) / enhanced.baseSalary) * 100)
+      
+      // Calculate newSalary in original currency (proposedRaise is in USD, convert to local)
+      const proposedRaiseLocal = enhanced.currency !== 'USD' && enhanced.baseSalary && enhanced.baseSalaryUSD 
+        ? (enhanced.proposedRaise * (enhanced.baseSalary / enhanced.baseSalaryUSD))
+        : enhanced.proposedRaise;
+      enhanced.newSalary = enhanced.baseSalary + proposedRaiseLocal;
+      
+      // Calculate percentage using USD values for consistency
+      enhanced.percentChange = enhanced.baseSalaryUSD > 0 
+        ? Math.round(((enhanced.proposedRaise || 0) / enhanced.baseSalaryUSD) * 100)
         : 0;
 
       // Ensure currency is set

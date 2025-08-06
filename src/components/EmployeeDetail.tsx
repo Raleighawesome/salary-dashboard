@@ -190,27 +190,17 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     try {
       const recommendedAmount = analysis.raiseRecommendation.recommendedAmount;
       
+      
       if (typeof recommendedAmount !== 'number' || recommendedAmount < 0) {
         console.error('Invalid recommendation amount:', recommendedAmount);
         return;
       }
 
-      // Convert to employee's local currency for proposedRaise
-      const employeeCurrency = employee.currency || 'USD';
-      let proposedRaiseAmount = recommendedAmount; // Default to USD
+      // Store proposedRaise in USD for consistency across the application
+      console.log(`🤖 Applying AI recommendation: ${formatCurrencyDisplay(recommendedAmount, 'USD')}`);
       
-      if (employeeCurrency !== 'USD' && employee.baseSalary && employee.baseSalaryUSD && employee.baseSalaryUSD > 0) {
-        // Calculate conversion rate from USD to local currency
-        const conversionRate = employee.baseSalary / employee.baseSalaryUSD;
-        proposedRaiseAmount = Math.round(recommendedAmount * conversionRate);
-        
-        console.log(`🤖 Applying AI recommendation: ${formatCurrencyDisplay(recommendedAmount, 'USD')} → ${formatCurrencyDisplay(proposedRaiseAmount, employeeCurrency)}`);
-      } else {
-        console.log(`🤖 Applying AI recommendation: ${formatCurrencyDisplay(recommendedAmount, 'USD')}`);
-      }
-      
-      onEmployeeUpdate(employee.employeeId || employee.id, { proposedRaise: proposedRaiseAmount });
-      setTempProposedRaise(proposedRaiseAmount);
+      onEmployeeUpdate(employee.employeeId || employee.id, { proposedRaise: recommendedAmount });
+      setTempProposedRaise(recommendedAmount);
       setIsEditingRaise(false);
       
       // Show success indicator
@@ -224,7 +214,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     } catch (error) {
       console.error('Error applying AI recommendation:', error);
     }
-  }, [analysis.raiseRecommendation.recommendedAmount, employee.employeeId, employee.id, employee.currency, employee.baseSalary, employee.baseSalaryUSD, onEmployeeUpdate, budgetCurrency]);
+  }, [analysis.raiseRecommendation.recommendedAmount, employee.employeeId, employee.id, onEmployeeUpdate]);
 
   // Format currency display (5.4)
   const formatCurrencyDisplay = useCallback((amount: number, currency?: string) => {
@@ -232,15 +222,19 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     return EmployeeCalculations.formatCurrency(amount, displayCurrency);
   }, [budgetCurrency]);
 
-  // Calculate new salary with proposed raise
+  // Calculate new salary with proposed raise (convert USD raise to local currency)
   const newSalary = useMemo(() => {
-    return analysis.salaryAnalysis.currentSalary + (employee.proposedRaise || 0);
-  }, [analysis.salaryAnalysis.currentSalary, employee.proposedRaise]);
+    const proposedRaiseLocal = employee.currency !== 'USD' && employee.baseSalary && employee.baseSalaryUSD && employee.baseSalaryUSD > 0
+      ? (employee.proposedRaise || 0) * (employee.baseSalary / employee.baseSalaryUSD)
+      : (employee.proposedRaise || 0);
+    return analysis.salaryAnalysis.currentSalary + proposedRaiseLocal;
+  }, [analysis.salaryAnalysis.currentSalary, employee.proposedRaise, employee.currency, employee.baseSalary, employee.baseSalaryUSD]);
 
   const newSalaryPercent = useMemo(() => {
-    if (analysis.salaryAnalysis.currentSalary === 0) return 0;
-    return ((employee.proposedRaise || 0) / analysis.salaryAnalysis.currentSalary) * 100;
-  }, [analysis.salaryAnalysis.currentSalary, employee.proposedRaise]);
+    const baseSalaryUSD = employee.baseSalaryUSD || analysis.salaryAnalysis.currentSalary;
+    if (baseSalaryUSD === 0) return 0;
+    return ((employee.proposedRaise || 0) / baseSalaryUSD) * 100;
+  }, [employee.baseSalaryUSD, analysis.salaryAnalysis.currentSalary, employee.proposedRaise]);
 
   // Get performance badge (matching EmployeeTable logic)
   const getPerformanceBadge = useCallback((rating: string | number): { text: string; className: string } => {

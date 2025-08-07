@@ -55,6 +55,8 @@ export interface SalarySheetRow {
   managerId?: string;
   managerName?: string;
   gradeLevel?: string;
+  salaryRangeSegment?: string;
+  belowRangeMinimum?: string;
 }
 
 export interface PerformanceSheetRow {

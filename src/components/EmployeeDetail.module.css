@@ -337,6 +337,19 @@
   color: #805ad5;
 }
 
+/* Below Range Minimum Warning */
+.belowMinimum {
+  background: #fed7d7;
+  border-radius: 6px;
+  padding: 8px 12px;
+  border-left: 4px solid #e53e3e;
+}
+
+.warning {
+  color: #c53030;
+  font-weight: 700;
+}
+
 /* Proposed Raise Section */
 .proposedRaise {
   display: flex;

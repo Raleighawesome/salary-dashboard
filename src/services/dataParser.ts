@@ -114,6 +114,18 @@ const SALARY_COLUMN_MAPPINGS: Record<string, keyof SalarySheetRow> = {
   'grade band': 'gradeLevel',
   'grade_band': 'gradeLevel',
   'compensation grade profile': 'gradeLevel',
+  
+  // Salary Range Segment - RH format specific
+  'salary range segment': 'salaryRangeSegment',
+  'salary_range_segment': 'salaryRangeSegment',
+  'range_segment': 'salaryRangeSegment',
+  
+  // Below Range Minimum - RH format specific
+  'below range minimum?': 'belowRangeMinimum',
+  'below_range_minimum?': 'belowRangeMinimum',
+  'below range minimum': 'belowRangeMinimum',
+  'below_range_minimum': 'belowRangeMinimum',
+  'is_below_minimum': 'belowRangeMinimum',
 };
 
 const PERFORMANCE_COLUMN_MAPPINGS: Record<string, keyof PerformanceSheetRow> = {

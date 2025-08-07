@@ -163,31 +163,36 @@ body {
   margin: 0 auto;
   padding: 2rem;
   width: 100%;
+  max-width: 4000px;
 }
 
 /* Dashboard view uses full width */
 .app-main.dashboard-main {
-  margin: 0;
+  margin: 0 auto;
   padding: 0;
-  max-width: none;
+  max-width: 4000px;
+  width: 100%;
 }
 
-/* Upload view gets constrained width */
+/* Upload view uses full width */
 .app-main .upload-view {
-  max-width: 1400px;
+  max-width: 4000px;
   margin: 0 auto;
+  width: 100%;
 }
 
 /* Dashboard view uses full width */
 .app-main .dashboard-view {
   width: 100%;
-  max-width: none;
+  max-width: 4000px;
+  margin: 0 auto;
 }
 
 /* Allow full width for table view */
 .app-main.full-width {
-  max-width: none;
+  max-width: 4000px;
   padding: 2rem 1rem;
+  width: 100%;
 }
 
 /* View Containers */
@@ -271,6 +276,12 @@ body {
   font-weight: 600;
   color: #1e293b;
   font-size: 1.1rem;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+  cursor: help;
 }
 
 .file-type {
@@ -326,10 +337,78 @@ body {
   border-top: 1px solid #e2e8f0;
 }
 
+.error-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.error-summary:hover {
+  background-color: #fef2f2;
+}
+
 .error-count {
   color: #dc2626;
   font-size: 0.875rem;
   font-weight: 500;
+}
+
+.dropdown-arrow {
+  color: #6b7280;
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+.error-details {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: #fef2f2;
+  border-radius: 0.5rem;
+  border: 1px solid #fecaca;
+  animation: slideDown 0.2s ease-out;
+}
+
+.error-details-header {
+  color: #991b1b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.error-list {
+  margin: 0;
+  padding-left: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.error-item {
+  color: #dc2626;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  word-break: break-word;
+}
+
+.error-item:last-child {
+  margin-bottom: 0;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+    transform: translateY(0);
+  }
 }
 
 /* Proceed Section */

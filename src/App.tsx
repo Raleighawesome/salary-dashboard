@@ -15,6 +15,7 @@ function App() {
   const [processedEmployees, setProcessedEmployees] = useState<Employee[]>([]);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [expandedIssues, setExpandedIssues] = useState<Record<number, boolean>>({});
   
   // Budget management state - moved from Dashboard to persist across views
   const [totalBudget, setTotalBudget] = useState<number>(0);
@@ -220,6 +221,25 @@ function App() {
     setShowResetConfirm(false);
   }, []);
 
+  // Helper function to truncate file names
+  const truncateFileName = useCallback((fileName: string, maxLength: number = 30): string => {
+    if (fileName.length <= maxLength) return fileName;
+    
+    const extension = fileName.split('.').pop();
+    const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
+    const truncatedName = nameWithoutExt.substring(0, maxLength - extension!.length - 4);
+    
+    return `${truncatedName}...${extension}`;
+  }, []);
+
+  // Helper function to toggle issue details
+  const toggleIssueDetails = useCallback((fileIndex: number) => {
+    setExpandedIssues(prev => ({
+      ...prev,
+      [fileIndex]: !prev[fileIndex]
+    }));
+  }, []);
+
   // Use processed employee data instead of raw file data
   const totalEmployees = processedEmployees.length;
 
@@ -243,11 +263,6 @@ function App() {
       {/* Header */}
       <header className="app-header">
         <div className="header-content">
-          <h1 className="app-title">💰 Salary Raise Dashboard</h1>
-          <p className="app-subtitle">
-            Manage salary raises with budget tracking and policy validation
-          </p>
-          
           {/* Navigation */}
           <nav className="app-nav">
             <button
@@ -354,7 +369,12 @@ function App() {
                   {uploadedFiles.map((file, index) => (
                     <div key={index} className="summary-card">
                       <div className="card-header">
-                        <span className="file-name">{file.fileName}</span>
+                        <span 
+                          className="file-name" 
+                          title={file.fileName}
+                        >
+                          {truncateFileName(file.fileName)}
+                        </span>
                         <span className={`file-type ${file.fileType}`}>{file.fileType}</span>
                       </div>
                       <div className="card-stats">
@@ -375,7 +395,30 @@ function App() {
                       </div>
                       {file.errors.length > 0 && (
                         <div className="card-errors">
-                          <span className="error-count">{file.errors.length} issues found</span>
+                          <div 
+                            className="error-summary"
+                            onClick={() => toggleIssueDetails(index)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <span className="error-count">
+                              {file.errors.length} issue{file.errors.length !== 1 ? 's' : ''} found
+                            </span>
+                            <span className="dropdown-arrow">
+                              {expandedIssues[index] ? '▲' : '▼'}
+                            </span>
+                          </div>
+                          {expandedIssues[index] && (
+                            <div className="error-details">
+                              <div className="error-details-header">Issue Details:</div>
+                              <ul className="error-list">
+                                {file.errors.map((error, errorIndex) => (
+                                  <li key={errorIndex} className="error-item">
+                                    {error}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

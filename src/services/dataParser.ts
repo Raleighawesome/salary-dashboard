@@ -8,6 +8,25 @@ import type {
   ValidationResult 
 } from '../types/employee';
 
+// Required columns for different file types
+const REQUIRED_SALARY_COLUMNS = ['employeeId', 'name', 'baseSalary'];
+const REQUIRED_PERFORMANCE_COLUMNS = ['employeeId', 'name'];
+
+// Workday-specific metadata patterns to ignore
+const WORKDAY_METADATA_PATTERNS = [
+  /^report\s*generated/i,
+  /^run\s*date/i,
+  /^filters\s*applied/i,
+  /^parameters/i,
+  /^total\s*count/i,
+  /^\s*$/, // Empty rows
+  /^page\s*\d+/i,
+  /^workday/i,
+  /^report\s*name/i,
+  /^company/i,
+  /^export\s*date/i,
+];
+
 // Column mapping for flexible CSV headers - Updated for RH Compensation Report format
 const SALARY_COLUMN_MAPPINGS: Record<string, keyof SalarySheetRow> = {
   // Employee ID variations - RH format uses "Employee Number"
@@ -183,6 +202,175 @@ const PERFORMANCE_COLUMN_MAPPINGS: Record<string, keyof PerformanceSheetRow> = {
 };
 
 export class DataParser {
+  
+  // Auto-clean Workday exports by removing metadata and empty rows
+  private static cleanWorkdayData(rawData: any[]): { cleanedData: any[], detectedHeaderRow: number, removedRows: number } {
+    if (!Array.isArray(rawData) || rawData.length === 0) {
+      return { cleanedData: [], detectedHeaderRow: -1, removedRows: 0 };
+    }
+
+    let headerRowIndex = -1;
+    let removedRows = 0;
+    
+    // Find the actual header row by looking for data patterns
+    for (let i = 0; i < Math.min(rawData.length, 20); i++) {
+      const row = rawData[i];
+      
+      // Skip if row is empty or has very few non-empty cells
+      if (!row || (Array.isArray(row) && row.filter(cell => cell && cell.toString().trim()).length < 3)) {
+        removedRows++;
+        continue;
+      }
+      
+      // Check if this row matches Workday metadata patterns
+      const firstCell = Array.isArray(row) ? row[0] : Object.values(row)[0];
+      const isMetadata = WORKDAY_METADATA_PATTERNS.some(pattern => 
+        pattern.test(String(firstCell || '').trim())
+      );
+      
+      if (isMetadata) {
+        removedRows++;
+        continue;
+      }
+      
+      // Check if this looks like a header row
+      if (Array.isArray(row)) {
+        // For array format, check if cells contain typical header names
+        const hasHeaderLikeContent = row.some(cell => {
+          const cellStr = String(cell || '').toLowerCase();
+          return cellStr.includes('employee') || 
+                 cellStr.includes('name') || 
+                 cellStr.includes('salary') || 
+                 cellStr.includes('performance') ||
+                 cellStr.includes('comparatio') ||
+                 cellStr.includes('grade');
+        });
+        
+        if (hasHeaderLikeContent) {
+          headerRowIndex = i;
+          break;
+        }
+      } else {
+        // For object format, this is already processed data
+        headerRowIndex = i;
+        break;
+      }
+    }
+    
+    if (headerRowIndex === -1) {
+      // No clear header found, assume first non-empty row is header
+      headerRowIndex = removedRows;
+    }
+    
+    // Clean the data starting from the header row
+    const cleanedData = rawData.slice(headerRowIndex);
+    
+    // Remove any remaining empty rows
+    const finalCleanedData = cleanedData.filter(row => {
+      if (!row) return false;
+      
+      if (Array.isArray(row)) {
+        return row.some(cell => cell && cell.toString().trim());
+      } else {
+        return Object.values(row).some(value => value && value.toString().trim());
+      }
+    });
+    
+    const totalRemovedRows = rawData.length - finalCleanedData.length;
+    
+    return { 
+      cleanedData: finalCleanedData, 
+      detectedHeaderRow: headerRowIndex,
+      removedRows: totalRemovedRows 
+    };
+  }
+  
+  // Validate that required columns are present after mapping
+  private static validateRequiredColumns(
+    mappedData: any[], 
+    fileType: 'salary' | 'performance'
+  ): { isValid: boolean; missingColumns: string[]; errors: string[] } {
+    const requiredColumns = fileType === 'salary' ? REQUIRED_SALARY_COLUMNS : REQUIRED_PERFORMANCE_COLUMNS;
+    const errors: string[] = [];
+    const missingColumns: string[] = [];
+    
+    if (mappedData.length === 0) {
+      return { isValid: false, missingColumns: [], errors: ['No data rows found after cleaning'] };
+    }
+    
+    // Check if required columns exist in the mapped data
+    const firstRow = mappedData[0];
+    const availableColumns = Object.keys(firstRow);
+    
+    for (const requiredCol of requiredColumns) {
+      if (!availableColumns.includes(requiredCol)) {
+        missingColumns.push(requiredCol);
+      }
+    }
+    
+    if (missingColumns.length > 0) {
+      errors.push(`Missing required columns: ${missingColumns.join(', ')}`);
+    }
+    
+    // Additional validation for salary files
+    if (fileType === 'salary') {
+      const rowsWithValidSalary = mappedData.filter(row => {
+        const salary = parseFloat(row.baseSalary);
+        return !isNaN(salary) && salary > 0;
+      });
+      
+      if (rowsWithValidSalary.length === 0) {
+        errors.push('No rows contain valid salary data');
+      } else if (rowsWithValidSalary.length < mappedData.length * 0.5) {
+        errors.push(`Only ${rowsWithValidSalary.length} of ${mappedData.length} rows contain valid salary data`);
+      }
+    }
+    
+    return { 
+      isValid: missingColumns.length === 0 && errors.length === 0, 
+      missingColumns, 
+      errors 
+    };
+  }
+  
+  // Detect Workday file format and suggest corrections
+  private static analyzeWorkdayFormat(rawData: any[]): {
+    isWorkdayFormat: boolean;
+    formatType: 'compensation' | 'talent' | 'unknown';
+    suggestions: string[];
+  } {
+    const suggestions: string[] = [];
+    let isWorkdayFormat = false;
+    let formatType: 'compensation' | 'talent' | 'unknown' = 'unknown';
+    
+    // Look for Workday-specific column patterns
+    const allText = JSON.stringify(rawData).toLowerCase();
+    
+    if (allText.includes('workday') || allText.includes('compensation report') || allText.includes('hierarchy')) {
+      isWorkdayFormat = true;
+      
+      if (allText.includes('compensation') || allText.includes('salary') || allText.includes('grade')) {
+        formatType = 'compensation';
+        suggestions.push('Detected Workday Compensation Report format');
+      } else if (allText.includes('talent') || allText.includes('performance') || allText.includes('calibration')) {
+        formatType = 'talent';
+        suggestions.push('Detected Workday Talent Assessment format');
+      }
+    }
+    
+    // Check for common Workday export issues
+    if (rawData.length > 0 && Array.isArray(rawData[0])) {
+      const hasEmptyFirstRows = rawData.slice(0, 5).every(row => 
+        !row || row.filter(cell => cell && cell.toString().trim()).length < 2
+      );
+      
+      if (hasEmptyFirstRows) {
+        suggestions.push('File contains metadata rows that will be automatically cleaned');
+      }
+    }
+    
+    return { isWorkdayFormat, formatType, suggestions };
+  }
   // Parse CSV file using Papaparse
   private static async parseCSV(file: File): Promise<Papa.ParseResult<any>> {
     return new Promise((resolve, reject) => {
@@ -197,7 +385,7 @@ export class DataParser {
     });
   }
 
-  // Parse XLSX file using xlsx library
+  // Parse XLSX file with enhanced empty row and header detection
   private static async parseXLSX(file: File): Promise<any[]> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -206,132 +394,141 @@ export class DataParser {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: 'array' });
           
-
-          
           // Get first worksheet
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
           
-          // Try multiple parsing approaches
-          
-          // Method 1: Raw array format
-          const jsonDataRaw = XLSX.utils.sheet_to_json(worksheet, {
-            header: 1,
-            defval: '',
-            blankrows: false,
-          });
-
-          
-          // Method 2: Object format with first row as headers
-          const jsonDataObj = XLSX.utils.sheet_to_json(worksheet, {
-            defval: '',
-            blankrows: false,
-          });
-
-          
-          // Method 3: Include blank rows to see everything
-          const jsonDataWithBlanks = XLSX.utils.sheet_to_json(worksheet, {
+          // Get raw data with blank rows to see the full structure
+          const rawDataWithBlanks = XLSX.utils.sheet_to_json(worksheet, {
             header: 1,
             defval: '',
             blankrows: true,
+            range: undefined // Read entire sheet
           });
-
           
-          // Method 4: Force a larger range to see if data exists beyond detected range
-          const jsonDataForced = XLSX.utils.sheet_to_json(worksheet, {
-            header: 1,
-            defval: '',
-            range: 'A1:Z100', // Force reading up to column Z, row 100
-          });
-
+          console.log(`📊 XLSX parsing - found ${rawDataWithBlanks.length} total rows`);
+          console.log(`📋 First 5 rows:`, rawDataWithBlanks.slice(0, 5));
           
-
+          // Find the actual header row by scanning for column names
+          let headerRowIndex = -1;
+          let headers: string[] = [];
           
-          // Choose the best method based on results
-          let jsonData: any[] = [];
-          let useObjectFormat = false;
+          for (let i = 0; i < Math.min(rawDataWithBlanks.length, 20); i++) {
+            const row = rawDataWithBlanks[i] as any[];
+            
+            // Skip completely empty rows
+            if (!row || row.length === 0 || row.every(cell => !cell || cell.toString().trim() === '')) {
+              console.log(`📋 Skipping empty row ${i}`);
+              continue;
+            }
+            
+            // Count non-empty cells
+            const nonEmptyCells = row.filter(cell => cell && cell.toString().trim() !== '');
+            console.log(`📋 Row ${i} has ${nonEmptyCells.length} non-empty cells:`, nonEmptyCells.slice(0, 5));
+            
+            if (nonEmptyCells.length >= 3) { // Need at least 3 columns for a valid header
+              // Check if this looks like a header row
+              const rowText = row.join(' ').toLowerCase();
+              const hasHeaderKeywords = [
+                'employee', 'name', 'id', 'salary', 'performance', 'rating', 
+                'comparatio', 'grade', 'manager', 'department', 'email', 'worker',
+                'business title', 'job', 'talent', 'assessment', 'calibration'
+              ].some(keyword => rowText.includes(keyword));
+              
+              console.log(`📋 Row ${i} header keywords check:`, hasHeaderKeywords, '- content:', rowText.substring(0, 100));
+              
+              if (hasHeaderKeywords) {
+                headerRowIndex = i;
+                headers = row
+                  .map(cell => cell ? cell.toString().trim() : '')
+                  .filter(cell => cell !== ''); // Keep all non-empty headers
+                
+                console.log(`✅ Found header row at index ${i} with ${headers.length} columns`);
+                console.log(`📋 Headers:`, headers.slice(0, 10));
+                break;
+              }
+            }
+          }
           
-          if (jsonDataObj.length > 0) {
-            // Use object format if available
-            jsonData = jsonDataObj;
-            useObjectFormat = true;
-
-          } else if (jsonDataForced.length > 1) {
-            // Use forced range if it found more data
-            jsonData = jsonDataForced;
-
-          } else if (jsonDataRaw.length > 1) {
-            // Use raw format if we have more than just headers
-            jsonData = jsonDataRaw;
-
-          } else if (jsonDataWithBlanks.length > 1) {
-            // Last resort: use format with blanks
-            jsonData = jsonDataWithBlanks;
-
-          } else {
-
-            reject(new Error('Worksheet contains only headers, no data rows'));
+          // If no keyword-based header found, look for first row with sufficient data
+          if (headerRowIndex === -1) {
+            for (let i = 0; i < Math.min(rawDataWithBlanks.length, 10); i++) {
+              const row = rawDataWithBlanks[i] as any[];
+              if (row && row.filter(cell => cell && cell.toString().trim()).length >= 3) {
+                headerRowIndex = i;
+                headers = row
+                  .map(cell => cell ? cell.toString().trim() : '')
+                  .filter(cell => cell !== '');
+                
+                console.log(`📋 Using first data row as headers at index ${i}`);
+                break;
+              }
+            }
+          }
+          
+          if (headerRowIndex === -1 || headers.length === 0) {
+            reject(new Error('Could not find valid header row in XLSX file. Please ensure the file contains column headers.'));
             return;
           }
           
-          if (jsonData.length === 0) {
-            reject(new Error('Worksheet is empty'));
-            return;
-          }
+          // Normalize headers to lowercase for consistent mapping
+          const normalizedHeaders = headers.map(h => h.toLowerCase().trim());
           
-          let objects: any[] = [];
+          // Extract data rows starting after the header
+          const dataRows = rawDataWithBlanks.slice(headerRowIndex + 1)
+            .filter((row, index) => {
+              if (!row || row.length === 0) return false;
+              
+              // Keep rows that have meaningful data
+              const nonEmptyValues = row.filter(cell => 
+                cell !== null && 
+                cell !== undefined && 
+                cell !== '' && 
+                String(cell).trim() !== ''
+              );
+              
+              const hasMinimumData = nonEmptyValues.length >= Math.min(2, headers.length * 0.2);
+              
+              if (!hasMinimumData) {
+                console.log(`📋 Filtering out row ${headerRowIndex + 1 + index} - insufficient data:`, nonEmptyValues.length, 'values');
+              }
+              
+              return hasMinimumData;
+            });
           
-          if (useObjectFormat) {
-            // Data is already in object format
-            objects = jsonData.map((row: any) => {
-              const normalizedRow: any = {};
-              Object.keys(row).forEach(key => {
-                const normalizedKey = key.toLowerCase().trim();
-                normalizedRow[normalizedKey] = row[key]?.toString().trim() || '';
-              });
-              return normalizedRow;
+          console.log(`📊 Processing ${dataRows.length} data rows from XLSX`);
+          
+          // Convert to objects using detected headers
+          const objects = dataRows.map((row: any[], rowIndex: number) => {
+            const obj: any = {};
+            
+            // Map each header to its corresponding cell value
+            normalizedHeaders.forEach((header, colIndex) => {
+              const cellValue = row[colIndex];
+              obj[header] = cellValue !== null && cellValue !== undefined 
+                ? cellValue.toString().trim() 
+                : '';
             });
             
-    
-          } else {
-            // Data is in array format, need to convert to objects
-            const headers = (jsonData[0] as any[])
-              .filter(h => h !== null && h !== undefined && h !== '')
-              .map(h => h.toString().toLowerCase().trim());
-            
-
-            
-            // Convert data rows to objects
-            objects = (jsonData.slice(1) as any[][])
-              .filter(row => {
-                // Keep rows that have at least one non-empty cell
-                return row && row.some(cell => 
-                  cell !== null && 
-                  cell !== undefined && 
-                  cell !== '' && 
-                  String(cell).trim() !== ''
-                );
-              })
-              .map((row: any[]) => {
-                const obj: any = {};
-                headers.forEach((header, index) => {
-                  const cellValue = row[index];
-                  obj[header] = cellValue !== null && cellValue !== undefined 
-                    ? cellValue.toString().trim() 
-                    : '';
-                });
-                return obj;
-              });
+            return obj;
+          });
+          
+          if (objects.length === 0) {
+            reject(new Error('No valid data rows found after header row. Please check that your file contains employee data.'));
+            return;
           }
           
-
+          console.log(`✅ Successfully parsed XLSX: ${objects.length} rows, ${normalizedHeaders.length} columns`);
+          console.log(`📋 Sample row:`, objects[0]);
+          console.log(`📋 Available columns:`, normalizedHeaders.slice(0, 15));
           
           resolve(objects);
         } catch (error) {
-          reject(error);
+          console.error('❌ XLSX parsing error:', error);
+          reject(new Error(`XLSX parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
         }
       };
-      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.onerror = () => reject(new Error('Failed to read XLSX file'));
       reader.readAsArrayBuffer(file);
     });
   }
@@ -575,6 +772,33 @@ export class DataParser {
         };
       }
       
+      // Step 2.5: Analyze Workday format and auto-clean data
+      const workdayAnalysis = this.analyzeWorkdayFormat(rawData);
+      const cleaningResult = this.cleanWorkdayData(rawData);
+      
+      console.log(`📊 Data cleaning results:`, {
+        originalRows: rawData.length,
+        cleanedRows: cleaningResult.cleanedData.length,
+        removedRows: cleaningResult.removedRows,
+        detectedHeaderRow: cleaningResult.detectedHeaderRow,
+        isWorkdayFormat: workdayAnalysis.isWorkdayFormat,
+        formatType: workdayAnalysis.formatType
+      });
+      
+      // Use cleaned data for further processing
+      rawData = cleaningResult.cleanedData;
+      
+      if (rawData.length === 0) {
+        return {
+          fileName: file.name,
+          fileType: 'unknown',
+          rowCount: cleaningResult.removedRows,
+          validRows: 0,
+          errors: ['File contains no valid data rows after cleaning metadata'],
+          data: [],
+        };
+      }
+      
       // Step 3: Validate data structure
       const structureValidation = ErrorHandler.validateDataStructure(rawData, file.name);
       
@@ -636,6 +860,22 @@ export class DataParser {
             });
           }
           
+          // Validate required columns for salary data
+          const requiredColumnValidation = this.validateRequiredColumns(salaryData, 'salary');
+          if (!requiredColumnValidation.isValid) {
+            return {
+              fileName: file.name,
+              fileType: 'salary',
+              rowCount: rawData.length + cleaningResult.removedRows,
+              validRows: 0,
+              errors: [
+                ...requiredColumnValidation.errors,
+                ...workdayAnalysis.suggestions.map(s => `Info: ${s}`)
+              ],
+              data: [],
+            };
+          }
+          
           const salaryValidation = this.validateSalaryData(salaryData);
           const validSalaryRows = salaryValidation.filter(v => v.isValid).length;
           const salaryValidityRate = validSalaryRows / salaryValidation.length;
@@ -670,6 +910,23 @@ export class DataParser {
         
         if (finalType === 'performance') {
           const performanceData = this.mapColumns(rawData, PERFORMANCE_COLUMN_MAPPINGS);
+          
+          // Validate required columns for performance data
+          const requiredColumnValidation = this.validateRequiredColumns(performanceData, 'performance');
+          if (!requiredColumnValidation.isValid) {
+            return {
+              fileName: file.name,
+              fileType: 'performance',
+              rowCount: rawData.length + cleaningResult.removedRows,
+              validRows: 0,
+              errors: [
+                ...requiredColumnValidation.errors,
+                ...workdayAnalysis.suggestions.map(s => `Info: ${s}`)
+              ],
+              data: [],
+            };
+          }
+          
           validationResults = this.validatePerformanceData(performanceData);
           mappedData = performanceData;
         }
@@ -708,6 +965,17 @@ export class DataParser {
       const structureWarnings = structureValidation.warnings.map(w => `Data structure: ${w.message}`);
       allWarnings.push(...structureWarnings);
       
+      // Add Workday-specific analysis results
+      if (workdayAnalysis.isWorkdayFormat) {
+        allWarnings.push(`Workday format detected: ${workdayAnalysis.formatType}`);
+      }
+      if (cleaningResult.removedRows > 0) {
+        allWarnings.push(`Auto-cleaned ${cleaningResult.removedRows} metadata/empty rows`);
+      }
+      workdayAnalysis.suggestions.forEach(suggestion => {
+        allWarnings.push(`Info: ${suggestion}`);
+      });
+      
       // Filter mapped data to only include valid rows
       const validMappedData = mappedData.filter((_, index) => 
         validationResults[index].isValid
@@ -724,7 +992,7 @@ export class DataParser {
       return {
         fileName: file.name,
         fileType: finalType,
-        rowCount: rawData.length,
+        rowCount: rawData.length + cleaningResult.removedRows, // Include cleaned rows in total count
         validRows: validRows.length,
         errors: finalErrors,
         data: validMappedData,

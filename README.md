@@ -163,7 +163,7 @@ EMP002,3.8,1,9
 ## 📊 Policy Validation Rules
 
 The application enforces these default policies:
-- **Comparatio Floor**: 74% minimum
+- **Comparatio Floor**: 76% minimum
 - **Maximum Raise (US)**: 12% of base salary
 - **Maximum Raise (India)**: 10% of base salary
 - **No-Raise Threshold**: Employees without raises for 18+ months flagged

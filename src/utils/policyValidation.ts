@@ -1,7 +1,7 @@
 import type { PolicyViolation } from '../types/employee';
 
 export interface PolicySettings {
-  comparatioFloor: number; // 74%
+  comparatioFloor: number; // 76%
   maxRaisePercentUS: number; // 12%
   maxRaisePercentIndia: number; // 10%
   noRaiseThresholdMonths: number; // 18 months
@@ -15,7 +15,7 @@ export interface ValidationContext {
 
 export class PolicyValidator {
   private static defaultPolicies: PolicySettings = {
-    comparatioFloor: 74,
+    comparatioFloor: 76,
     maxRaisePercentUS: 12,
     maxRaisePercentIndia: 10,
     noRaiseThresholdMonths: 18,

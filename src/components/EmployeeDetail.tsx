@@ -377,6 +377,16 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                     }
                   </span>
                 </div>
+                {(employee.belowRangeMinimum === 'Yes' || 
+                  employee.belowRangeMinimum === 'yes' ||
+                  employee.belowRangeMinimum === 'Below Minimum') && (
+                  <div className={`${styles.comparatio} ${styles.belowMinimum}`}>
+                    <span className={styles.label}>⚠️ Below Range:</span>
+                    <span className={`${styles.value} ${styles.warning}`}>
+                      Below Minimum
+                    </span>
+                  </div>
+                )}
                 <div className={styles.lastRaise}>
                   <span className={styles.label}>Last Raise Received:</span>
                   <span className={styles.value}>
@@ -678,51 +688,9 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                   <div className={styles.rangeDetail}>
                     <span className={styles.label}>Segment:</span>
                     <span className={styles.value}>
-                      {(() => {
-                        // Debug: Check all possible field variations
-                        const segment = employee.salaryRangeSegment || 
-                                      employee['Salary Range Segment'] || 
-                                      employee['salary range segment'] ||
-                                      'Not Available';
-                        
-                        // Debug: Log to console to see what fields are available
-                        if (process.env.NODE_ENV === 'development') {
-                          console.log('Employee object keys:', Object.keys(employee));
-                          console.log('Salary Range Segment variations:', {
-                            salaryRangeSegment: employee.salaryRangeSegment,
-                            'Salary Range Segment': employee['Salary Range Segment'],
-                            'salary range segment': employee['salary range segment']
-                          });
-                        }
-                        
-                        return segment;
-                      })()}
+                      {employee.salaryRangeSegment || 'Not Available'}
                     </span>
                   </div>
-                  {(() => {
-                    // Debug: Check all possible Below Range Minimum variations
-                    const belowMinimum = employee.belowRangeMinimum || 
-                                        employee['Below Range Minimum?'] || 
-                                        employee['below range minimum?'];
-                    
-                    // Debug: Log to console
-                    if (process.env.NODE_ENV === 'development') {
-                      console.log('Below Range Minimum variations:', {
-                        belowRangeMinimum: employee.belowRangeMinimum,
-                        'Below Range Minimum?': employee['Below Range Minimum?'],
-                        'below range minimum?': employee['below range minimum?']
-                      });
-                    }
-                    
-                    return (belowMinimum === 'Yes' || belowMinimum === 'yes');
-                  })() && (
-                    <div className={`${styles.rangeDetail} ${styles.belowMinimum}`}>
-                      <span className={styles.label}>⚠️ Below Range:</span>
-                      <span className={`${styles.value} ${styles.warning}`}>
-                        Below Minimum
-                      </span>
-                    </div>
-                  )}
                   <div className={styles.rangeDetail}>
                     <span className={styles.label}>Room for Growth:</span>
                     <span className={styles.value}>

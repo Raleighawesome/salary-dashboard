@@ -285,6 +285,8 @@ export class DataJoiner {
           futuretalent: performanceRow.futuretalent,
           movementReadiness: performanceRow.movementReadiness,
           proposedTalentActions: performanceRow.proposedTalentActions,
+          salaryRangeSegment: salaryRow.salaryRangeSegment,
+          belowRangeMinimum: salaryRow.belowRangeMinimum,
         };
 
       } else {
@@ -318,6 +320,8 @@ export class DataJoiner {
           futuretalent: undefined,
           movementReadiness: undefined,
           proposedTalentActions: undefined,
+          salaryRangeSegment: salaryRow.salaryRangeSegment,
+          belowRangeMinimum: salaryRow.belowRangeMinimum,
         };
 
         unmatchedSalaryRows.push(salaryRow);

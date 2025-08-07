@@ -407,7 +407,7 @@ export class DataStorageService {
     const existingPolicy = await db.policies.toCollection().first();
     if (!existingPolicy) {
       await db.policies.add({
-        comparatioFloor: 74,
+        comparatioFloor: 76,
         maxRaisePercentUS: 12,
         maxRaisePercentIndia: 10,
         noRaiseThresholdMonths: 18,
@@ -419,7 +419,7 @@ export class DataStorageService {
   static async getPolicySettings(): Promise<PolicySettings> {
     const policy = await db.policies.toCollection().first();
     return policy || {
-      comparatioFloor: 74,
+      comparatioFloor: 76,
       maxRaisePercentUS: 12,
       maxRaisePercentIndia: 10,
       noRaiseThresholdMonths: 18,

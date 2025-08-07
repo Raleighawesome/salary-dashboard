@@ -30,6 +30,8 @@ export interface Employee {
   futuretalent?: string;
   movementReadiness?: string;
   proposedTalentActions?: string;
+  salaryRangeSegment?: string;
+  belowRangeMinimum?: string;
 }
 
 // Raw data from uploaded CSV files

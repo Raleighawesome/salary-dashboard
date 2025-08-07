@@ -275,28 +275,6 @@ export const BudgetInput: React.FC<BudgetInputProps> = ({
         </div>
       </div>
 
-      {/* Budget Guidelines */}
-      <div className={styles.budgetGuidelines}>
-        <h4>💡 Budget Guidelines</h4>
-        <ul className={styles.guidelinesList}>
-          <li>
-            <span className={`${styles.statusIndicator} ${styles.low}`}></span>
-            <strong>0-50%:</strong> Conservative utilization - room for additional raises
-          </li>
-          <li>
-            <span className={`${styles.statusIndicator} ${styles.medium}`}></span>
-            <strong>50-80%:</strong> Moderate utilization - monitor remaining budget
-          </li>
-          <li>
-            <span className={`${styles.statusIndicator} ${styles.high}`}></span>
-            <strong>80-100%:</strong> High utilization - careful allocation needed
-          </li>
-          <li>
-            <span className={`${styles.statusIndicator} ${styles.over}`}></span>
-            <strong>Over 100%:</strong> Budget exceeded - review and adjust raises
-          </li>
-        </ul>
-      </div>
     </div>
   );
 };

@@ -2,7 +2,6 @@ import React, { useState, useCallback, useMemo } from 'react';
 import type { FileUploadResult, PolicyViolation } from '../types/employee';
 import { BudgetInput } from './BudgetInput';
 import { BudgetSummary } from './BudgetSummary';
-import { MetricsCards } from './MetricsCards';
 import { MetricsHeatMap } from './MetricsHeatMap';
 import { EmployeeTable } from './EmployeeTable';
 import EmployeeDetail from './EmployeeDetail';
@@ -328,16 +327,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
               />
             </div>
 
-            {/* Metrics Cards */}
-            <div className={styles.metricsSection}>
-              <MetricsCards
-                totalEmployees={employeeData.length}
-                totalBudget={totalBudget}
-                budgetCurrency={budgetCurrency}
-                budgetMetrics={budgetMetrics}
-                employeeData={employeeData}
-              />
-            </div>
 
             {/* Metrics Heat Map */}
             <div className={styles.heatMapSection}>

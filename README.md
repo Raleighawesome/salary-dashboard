@@ -43,21 +43,12 @@ This dashboard helps managers during salary review cycles to:
 
 ### Step 1: Prepare Your Data Files
 
-You'll need employee data in CSV or XLSX format. The application supports:
+This app is built specifically with Workday sheet exports in mind. 
 
-**Salary Sheet** (required) - Must include:
-- `employeeId` or `email` - Unique identifier
-- `name` - Employee full name
-- `baseSalary` - Current salary amount
-- `currency` - Currency code (USD, EUR, GBP, etc.)
-- `country` - Employee location
-- `comparatio` - Current comparatio percentage
+Download:
+1. "Compensation Report w/ Hierarchy"
+2. "Talent Assessment Calibration Audit Report"
 
-**Performance Sheet** (optional) - Can include:
-- `employeeId` or `email` - Matching the salary sheet
-- `performanceRating` - Performance score
-- `retentionRisk` - Risk level
-- `businessImpactScore` - Impact rating
 
 ### Step 2: Upload Your Files
 
@@ -77,7 +68,7 @@ You'll need employee data in CSV or XLSX format. The application supports:
 1. **Navigate between views:**
    - **Overview**: Budget metrics and heat maps
    - **Employee Table**: Sortable list with inline editing
-   - **Employee Details**: Individual employee analysis
+   - **Employee Details**: Individual employee analysis when clicking on employee's name.
 
 2. **Make raise decisions:**
    - Edit proposed raise amounts directly in the table

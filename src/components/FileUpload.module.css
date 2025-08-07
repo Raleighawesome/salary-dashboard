@@ -1,7 +1,8 @@
 /* File Upload Container */
 .file-upload-container {
-  max-width: 800px;
-  margin: 0 auto;
+  /* Let the upload area use the full available width; parent controls padding */
+  max-width: none;
+  margin: 0;
   padding: 20px;
 }
 

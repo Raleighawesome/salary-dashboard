@@ -24,10 +24,15 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  /* Use normal document flow so the app can span full width */
+  display: block;
   min-width: 320px;
   min-height: 100vh;
+}
+
+/* Ensure the React root and app container span the full viewport width */
+#root {
+  width: 100%;
 }
 
 h1 {

@@ -24,6 +24,7 @@ body {
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 100%;
 }
 
 /* Header Styles */
@@ -160,7 +161,8 @@ body {
 /* Main Content */
 .app-main {
   flex: 1;
-  margin: 0 auto;
+  /* Fill full width; inner cards can control their own max-width if needed */
+  margin: 0;
   padding: 2rem;
   width: 100%;
   max-width: 4000px;
@@ -176,8 +178,8 @@ body {
 
 /* Upload view uses full width */
 .app-main .upload-view {
-  max-width: 4000px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   width: 100%;
 }
 

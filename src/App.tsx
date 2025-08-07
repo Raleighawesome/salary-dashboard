@@ -135,8 +135,6 @@ function App() {
       if (processResult.employees.length > 0) {
         setCurrentView('dashboard');
         
-        // Create initial backup after data is loaded
-        AutoBackupService.scheduleBackup(processResult.employees, totalBudget, budgetCurrency, 5000);
       }
       
       // Clear any previous errors
@@ -173,8 +171,6 @@ function App() {
           : emp
       );
       
-      // Trigger automatic backup on data changes
-      AutoBackupService.scheduleBackup(updatedEmployees, totalBudget, budgetCurrency);
       
       return updatedEmployees;
     });
@@ -186,10 +182,6 @@ function App() {
     setTotalBudget(budget);
     setBudgetCurrency(currency);
     
-    // Trigger automatic backup on budget changes
-    if (processedEmployees.length > 0) {
-      AutoBackupService.scheduleBackup(processedEmployees, budget, currency);
-    }
     
 
   }, [processedEmployees]);

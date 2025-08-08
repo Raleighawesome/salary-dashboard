@@ -170,7 +170,10 @@
 }
 
 .table thead {
-  /* Remove background here since it's set on th */
+  /* Make entire header section sticky for better cross-browser behavior */
+  position: sticky;
+  top: 0;
+  z-index: 20;
   border-bottom: 2px solid #e2e8f0;
 }
 
@@ -184,13 +187,10 @@
   background: #f8fafc;
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 20; /* Below dropdowns (1000) but above rows */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  /* Ensure header sticks to viewport, not container */
-  backdrop-filter: blur(10px);
-  /* Force hardware acceleration */
-  transform: translateZ(0);
-  will-change: transform;
+  /* Keep visuals, avoid transforms which can break sticky in some browsers */
+  backdrop-filter: blur(8px);
 }
 
 /* Column width optimization */

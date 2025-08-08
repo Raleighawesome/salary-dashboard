@@ -121,7 +121,8 @@
   border-top: none;
   border-radius: 0 0 0.75rem 0.75rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  /* Higher than table header but not excessively high */
+  z-index: 50;
   max-height: 200px;
   overflow-y: auto;
   animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);

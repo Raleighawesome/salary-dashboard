@@ -197,8 +197,13 @@ const PERFORMANCE_COLUMN_MAPPINGS: Record<string, keyof PerformanceSheetRow> = {
   'risk_score': 'retentionRisk',
   'retention risk': 'retentionRisk',
   'flight_risk': 'retentionRisk',
-  'identified as future talent?': 'retentionRisk',
-  'identified as future talent? (current)': 'retentionRisk',
+  
+  // Fix: Map "identified as future talent?" to futuretalent, not retentionRisk
+  'identified as future talent?': 'futuretalent',
+  'identified as future talent? (current)': 'futuretalent',
+  
+  // Add missing movement readiness mapping for non-calibrated data
+  'movement readiness': 'movementReadiness',
 };
 
 export class DataParser {
@@ -223,10 +228,18 @@ export class DataParser {
       }
       
       // Check if this row matches Workday metadata patterns
-      const firstCell = Array.isArray(row) ? row[0] : Object.values(row)[0];
-      const isMetadata = WORKDAY_METADATA_PATTERNS.some(pattern => 
-        pattern.test(String(firstCell || '').trim())
-      );
+      // For array-based rows (pre-header XLSX extraction), we can safely scan the first cell.
+      // For object-based rows (already header-mapped), do NOT treat empty first property as metadata,
+      // since many real data rows legitimately have blanks in the first column (e.g., "Ratings Changed?").
+      let isMetadata = false;
+      if (Array.isArray(row)) {
+        const firstCell = row[0];
+        isMetadata = WORKDAY_METADATA_PATTERNS.some(pattern => 
+          pattern.test(String(firstCell || '').trim())
+        );
+      } else {
+        isMetadata = false;
+      }
       
       if (isMetadata) {
         removedRows++;
@@ -360,8 +373,8 @@ export class DataParser {
     
     // Check for common Workday export issues
     if (rawData.length > 0 && Array.isArray(rawData[0])) {
-      const hasEmptyFirstRows = rawData.slice(0, 5).every(row => 
-        !row || row.filter(cell => cell && cell.toString().trim()).length < 2
+      const hasEmptyFirstRows = rawData.slice(0, 5).every((row: any[]) => 
+        !row || row.filter((cell: any) => cell && cell.toString().trim()).length < 2
       );
       
       if (hasEmptyFirstRows) {
@@ -371,15 +384,84 @@ export class DataParser {
     
     return { isWorkdayFormat, formatType, suggestions };
   }
-  // Parse CSV file using Papaparse
-  private static async parseCSV(file: File): Promise<Papa.ParseResult<any>> {
+  // Parse CSV file using Papaparse with robust header detection
+  // NOTE: Some Workday exports place a blank or metadata row first and the real
+  // headers on the second row. We scan the first N rows to detect the header.
+  private static async parseCSV(file: File): Promise<any[]> {
     return new Promise((resolve, reject) => {
       Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        transformHeader: (name: string) => name.toLowerCase().trim(),
-        transform: (value: string) => value.trim(),
-        complete: (results) => resolve(results),
+        header: false,
+        skipEmptyLines: false,
+        complete: (results) => {
+          try {
+            const rows: any[][] = results.data as any[][];
+            if (!Array.isArray(rows) || rows.length === 0) {
+              resolve([]);
+              return;
+            }
+
+            // Find header row among the first few rows (accounts for empty first row)
+            let headerRowIndex = -1;
+            let headers: string[] = [];
+
+            for (let i = 0; i < Math.min(rows.length, 20); i++) {
+              const row = rows[i];
+              if (!row || row.length === 0) continue;
+
+              // Count meaningful cells
+              const nonEmpty = row.filter(c => c !== null && c !== undefined && String(c).trim() !== '');
+              if (nonEmpty.length < 3) continue;
+
+              const rowText = row.map(c => String(c || '')).join(' ').toLowerCase();
+              const hasHeaderKeywords = [
+                'employee', 'associate', 'name', 'worker', 'id', 'salary', 'performance',
+                'rating', 'talent', 'calibrated', 'movement', 'readiness', 'manager', 'department'
+              ].some(k => rowText.includes(k));
+
+              if (hasHeaderKeywords) {
+                headerRowIndex = i;
+                headers = row.map(c => String(c || '').trim());
+                break;
+              }
+            }
+
+            // Fallback: first non-empty row
+            if (headerRowIndex === -1) {
+              for (let i = 0; i < Math.min(rows.length, 10); i++) {
+                const row = rows[i];
+                if (row && row.filter(c => c !== null && c !== undefined && String(c).trim() !== '').length >= 3) {
+                  headerRowIndex = i;
+                  headers = row.map(c => String(c || '').trim());
+                  break;
+                }
+              }
+            }
+
+            if (headerRowIndex === -1 || headers.length === 0) {
+              throw new Error('Could not detect headers in CSV file');
+            }
+
+            // Normalize headers and build objects for subsequent rows
+            const normalizedHeaders = headers.map(h => h.toLowerCase().trim());
+            const dataRows = rows.slice(headerRowIndex + 1).filter(r => Array.isArray(r));
+
+            const objects = dataRows
+              .map((row) => {
+                const obj: Record<string, any> = {};
+                normalizedHeaders.forEach((h, idx) => {
+                  const val = row[idx];
+                  obj[h] = val !== null && val !== undefined ? String(val).trim() : '';
+                });
+                return obj;
+              })
+              // Keep rows that have at least a couple of non-empty values
+              .filter(obj => Object.values(obj).filter(v => v !== '').length >= Math.min(2, normalizedHeaders.length * 0.2));
+
+            resolve(objects);
+          } catch (err) {
+            reject(err);
+          }
+        },
         error: (error) => reject(error),
       });
     });
@@ -399,7 +481,7 @@ export class DataParser {
           const worksheet = workbook.Sheets[firstSheetName];
           
           // Get raw data with blank rows to see the full structure
-          const rawDataWithBlanks = XLSX.utils.sheet_to_json(worksheet, {
+      const rawDataWithBlanks: any[][] = XLSX.utils.sheet_to_json(worksheet, {
             header: 1,
             defval: '',
             blankrows: true,
@@ -417,13 +499,13 @@ export class DataParser {
             const row = rawDataWithBlanks[i] as any[];
             
             // Skip completely empty rows
-            if (!row || row.length === 0 || row.every(cell => !cell || cell.toString().trim() === '')) {
+            if (!row || row.length === 0 || row.every((cell: any) => !cell || cell.toString().trim() === '')) {
               console.log(`📋 Skipping empty row ${i}`);
               continue;
             }
             
             // Count non-empty cells
-            const nonEmptyCells = row.filter(cell => cell && cell.toString().trim() !== '');
+            const nonEmptyCells = row.filter((cell: any) => cell && cell.toString().trim() !== '');
             console.log(`📋 Row ${i} has ${nonEmptyCells.length} non-empty cells:`, nonEmptyCells.slice(0, 5));
             
             if (nonEmptyCells.length >= 3) { // Need at least 3 columns for a valid header
@@ -475,12 +557,12 @@ export class DataParser {
           const normalizedHeaders = headers.map(h => h.toLowerCase().trim());
           
           // Extract data rows starting after the header
-          const dataRows = rawDataWithBlanks.slice(headerRowIndex + 1)
-            .filter((row, index) => {
+          const dataRows: any[][] = rawDataWithBlanks.slice(headerRowIndex + 1)
+            .filter((row: any[], index: number) => {
               if (!row || row.length === 0) return false;
               
               // Keep rows that have meaningful data
-              const nonEmptyValues = row.filter(cell => 
+              const nonEmptyValues = row.filter((cell: any) => 
                 cell !== null && 
                 cell !== undefined && 
                 cell !== '' && 
@@ -499,7 +581,7 @@ export class DataParser {
           console.log(`📊 Processing ${dataRows.length} data rows from XLSX`);
           
           // Convert to objects using detected headers
-          const objects = dataRows.map((row: any[], rowIndex: number) => {
+          const objects = dataRows.map((row: any[]) => {
             const obj: any = {};
             
             // Map each header to its corresponding cell value
@@ -538,8 +620,6 @@ export class DataParser {
     data: any[], 
     mappings: Record<string, keyof T>
   ): T[] {
-
-    
     return data.map((row, rowIndex) => {
       const mappedRow: any = {};
       
@@ -736,15 +816,11 @@ export class DataParser {
       const fileExtension = file.name.split('.').pop()?.toLowerCase();
       let rawData: any[] = [];
       
-      try {
-        if (fileExtension === 'csv') {
-          const parseResult = await this.parseCSV(file);
-          if (parseResult.errors.length > 0) {
-            const parseErrors = parseResult.errors.map(e => `CSV parsing error: ${e.message || e.type}`);
-            throw new Error(parseErrors.join('; '));
-          }
-          rawData = parseResult.data;
-        } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+       try {
+         if (fileExtension === 'csv') {
+           // New CSV parser returns array of objects directly
+           rawData = await this.parseCSV(file);
+         } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
           rawData = await this.parseXLSX(file);
         } else {
           throw new Error(`Unsupported file type: ${fileExtension}. Please use CSV, XLSX, or XLS files.`);
@@ -828,9 +904,16 @@ export class DataParser {
       }
       
       // Check if this is a combined salary+performance file (like RH format)
-      const hasPerformanceColumns = rawData.length > 0 && Object.keys(rawData[0]).some(key => 
-        key.toLowerCase().includes('performance') || key.toLowerCase().includes('rating')
-      );
+      const hasPerformanceColumns = rawData.length > 0 && Object.keys(rawData[0]).some(key => {
+        const lowerKey = key.toLowerCase();
+        return lowerKey.includes('performance') || 
+               lowerKey.includes('rating') ||
+               lowerKey.includes('talent') ||
+               lowerKey.includes('calibrated') ||
+               lowerKey.includes('movement') ||
+               lowerKey.includes('readiness');
+      });
+      
       
       try {
         if (finalType === 'salary' || finalType === 'unknown') {
@@ -839,23 +922,37 @@ export class DataParser {
           
           // If this looks like a combined file, also map performance data
           if (hasPerformanceColumns) {
+            console.log('🔍 Performance columns detected, mapping performance data...');
 
             const performanceData = this.mapColumns(rawData, PERFORMANCE_COLUMN_MAPPINGS);
+            console.log('🔍 Sample mapped performance data:', performanceData[0]);
             
             // Merge performance data into salary data
             salaryData.forEach((salaryRow, index) => {
               const performanceRow = performanceData[index];
               if (performanceRow) {
-                // Add performance fields to salary row
-                if (performanceRow.performanceRating) {
+                // Add performance fields to salary row (including empty/null values)
+                // Use !== undefined check instead of truthy check to preserve empty strings and nulls
+                if (performanceRow.performanceRating !== undefined) {
                   (salaryRow as any).performanceRating = performanceRow.performanceRating;
                 }
-                if (performanceRow.businessImpactScore) {
+                if (performanceRow.businessImpactScore !== undefined) {
                   (salaryRow as any).businessImpactScore = performanceRow.businessImpactScore;
                 }
-                if (performanceRow.retentionRisk) {
+                if (performanceRow.retentionRisk !== undefined) {
                   (salaryRow as any).retentionRisk = performanceRow.retentionRisk;
                 }
+                // Add missing performance fields
+                if (performanceRow.futuretalent !== undefined) {
+                  (salaryRow as any).futuretalent = performanceRow.futuretalent;
+                }
+                if (performanceRow.movementReadiness !== undefined) {
+                  (salaryRow as any).movementReadiness = performanceRow.movementReadiness;
+                }
+                if (performanceRow.proposedTalentActions !== undefined) {
+                  (salaryRow as any).proposedTalentActions = performanceRow.proposedTalentActions;
+                }
+                
               }
             });
           }

@@ -352,3 +352,23 @@ export class DataJoinerTester {
     };
   }
 } 
+
+// Jest unit: minimal join preserves performance fields
+describe('DataJoiner minimal join', () => {
+  it('joins by employeeId and keeps performance fields', () => {
+    const salary: SalarySheetRow[] = [
+      { employeeId: '1001', name: 'Jane Doe', baseSalary: 100000, currency: 'USD' },
+    ];
+    const performance: PerformanceSheetRow[] = [
+      { employeeId: '1001', name: 'Jane Doe', performanceRating: 'Successful Performer', futuretalent: 'Yes', movementReadiness: 'Ready Now', proposedTalentActions: 'Promote' },
+    ];
+
+    const { joinedEmployees } = DataJoiner.joinSalaryAndPerformanceData(salary, performance, {});
+    expect(joinedEmployees).toHaveLength(1);
+    const emp = joinedEmployees[0];
+    expect(emp.performanceRating).toBe('Successful Performer');
+    expect(emp.futuretalent).toBe('Yes');
+    expect(emp.movementReadiness).toBe('Ready Now');
+    expect(emp.proposedTalentActions).toBe('Promote');
+  });
+});

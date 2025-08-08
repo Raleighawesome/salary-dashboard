@@ -140,7 +140,7 @@ export class RaiseDashboardDB extends Dexie {
       employees: '++id, employeeId, email, name, country, currency, baseSalary, comparatio, timeInRole, retentionRisk',
       sessions: '++id, sessionId, budget, uploadTimestamp, lastModified',
       policies: '++id, lastUpdated',
-      currencyRates: '++id, fromCurrency, toCurrency, timestamp, expiresAt',
+      currencyRates: '++id, fromCurrency, toCurrency, [fromCurrency+toCurrency], timestamp, expiresAt',
       fileCache: '++id, fileHash, fileName, fileType, createdAt, lastAccessed',
       preferences: '++id',
       auditLog: '++id, sessionId, employeeId, action, timestamp'

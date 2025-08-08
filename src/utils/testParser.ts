@@ -1,5 +1,52 @@
 import { DataParser } from '../services/dataParser';
 
+// Helper to build a fake File from CSV text
+function buildCsvFile(name: string, content: string): File {
+  const blob = new Blob([content], { type: 'text/csv' });
+  return new File([blob], name, { type: 'text/csv' });
+}
+
+describe('DataParser CSV/XLSX header detection and mapping', () => {
+  test('parses CSV where header is on first row', async () => {
+    const csv = [
+      'Employee Number,Employee Full name,Overall Performance Rating,Identified as Future Talent?,Movement Readiness',
+      '1001,Jane Doe,Successful Performer,Yes,Ready Later',
+    ].join('\n');
+
+    const file = buildCsvFile('performance.csv', csv);
+    const result = await DataParser.parseFile(file as any, 'performance');
+
+    expect(result.fileType).toBe('performance');
+    expect(result.validRows).toBe(1);
+    const row: any = (result.data as any[])[0];
+    expect(row.employeeId).toBe('1001');
+    expect(row.name).toBe('Jane Doe');
+    expect(row.performanceRating).toBe('Successful Performer');
+    expect(row.futuretalent).toBe('Yes');
+    expect(row.movementReadiness).toContain('Ready');
+  });
+
+  test('parses CSV where first row is blank and header is second row', async () => {
+    const csv = [
+      ',,,,,',
+      'Employee Number,Employee Full name,Overall Performance Rating,Identified as Future Talent?,Movement Readiness',
+      '1002,John Smith,High Impact Performer,No,Ready Now',
+    ].join('\n');
+
+    const file = buildCsvFile('performance-blank-first.csv', csv);
+    const result = await DataParser.parseFile(file as any, 'performance');
+
+    expect(result.fileType).toBe('performance');
+    expect(result.validRows).toBe(1);
+    const row: any = (result.data as any[])[0];
+    expect(row.employeeId).toBe('1002');
+    expect(row.name).toBe('John Smith');
+    expect(row.performanceRating).toBe('High Impact Performer');
+    expect(row.futuretalent).toBe('No');
+    expect(row.movementReadiness).toBe('Ready Now');
+  });
+});
+
 // Test function to validate parser works with example files
 export async function testParserWithExampleFiles(): Promise<void> {
   try {

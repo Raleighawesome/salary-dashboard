@@ -460,6 +460,65 @@
   align-items: center;
 }
 
+/* Proposed Adjustment Considerations */
+.considerations {
+  margin-top: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.considerationsTitle {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.considerationsList {
+  list-style: none;
+  margin: 0;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.considerationItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.considerationItem.info {
+  background: #f0f9ff;
+  border-left: 4px solid #38bdf8;
+}
+
+.considerationItem.warning {
+  background: #fff7ed;
+  border-left: 4px solid #f59e0b;
+}
+
+.considerationItem.critical {
+  background: #fef2f2;
+  border-left: 4px solid #ef4444;
+}
+
+.considerationIcon {
+  font-size: 14px;
+}
+
+.considerationText {
+  font-size: 13px;
+  color: #374151;
+  font-weight: 600;
+}
+
 /* Salary Trend Chart (5.1) */
 .trendChart {
   display: flex;

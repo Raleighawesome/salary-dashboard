@@ -311,6 +311,48 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     return Math.round((newSalaryOriginal / salaryGradeMid) * 100);
   }, [employee.proposedRaise, employee.baseSalary, employee.baseSalaryUSD, employee.salaryGradeMid, analysis.salaryAnalysis.salaryGradeMid]);
 
+  // Proposed Adjustment Considerations (conditional line items requested)
+  const adjustmentConsiderations = useMemo(() => {
+    const items: { text: string; severity: 'critical' | 'warning' | 'info' }[] = [];
+
+    // Current comparatio from analysis
+    const currentComparatio = analysis?.salaryAnalysis?.comparatio || 0;
+
+    // 1) Below minimum (<76% comparatio)
+    if (currentComparatio > 0 && currentComparatio < 76) {
+      items.push({ text: 'Below minimum range (<76% compa-ratio)', severity: 'critical' });
+    } else if (currentComparatio > 0 && currentComparatio < 85) {
+      // 2) <85% comp ratio (only if not already flagged as <76%)
+      items.push({ text: '<85% compa-ratio', severity: 'warning' });
+    }
+
+    // 3) and 4) No merit increase in > 24 months or > 18 months
+    const lastRaiseMonthsAgo = analysis?.tenureInfo?.lastRaiseMonthsAgo || 0;
+    if (lastRaiseMonthsAgo > 24) {
+      items.push({ text: 'No merit increase in > 24 months', severity: 'warning' });
+    } else if (lastRaiseMonthsAgo > 18) {
+      items.push({ text: 'No merit increase in > 18 months', severity: 'info' });
+    }
+
+    // 5) Segment 1 in role > 24 months, if no performance issues
+    const isSegment1 = (() => {
+      const seg = (employee.salaryRangeSegment || '').toString().toLowerCase();
+      return seg === 'segment 1' || seg === '1' || seg.includes('segment 1');
+    })();
+    const timeInRoleMonths = analysis?.tenureInfo?.timeInRoleMonths || 0;
+    const derivedRating = employee.performanceRating ||
+      employee['CALIBRATED VALUE: Overall Performance Rating'] ||
+      employee['calibrated value: overall performance rating'] ||
+      '';
+    const perfClass = getPerformanceBadge(derivedRating).className;
+    const hasPerformanceIssues = perfClass === 'poor' || perfClass === 'critical';
+    if (isSegment1 && timeInRoleMonths > 24 && !hasPerformanceIssues) {
+      items.push({ text: 'Segment 1, >24 months in role, no performance issues', severity: 'info' });
+    }
+
+    return items;
+  }, [analysis?.salaryAnalysis?.comparatio, analysis?.tenureInfo?.lastRaiseMonthsAgo, analysis?.tenureInfo?.timeInRoleMonths, employee.salaryRangeSegment, employee.performanceRating, getPerformanceBadge]);
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -601,6 +643,115 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
 
           {/* Right Column */}
           <div className={styles.rightColumn}>
+            {/* 2. Proposed Adjustment Card */}
+            <div className={styles.card}>
+              <h3 className={styles.cardTitle}>🎯 Proposed Adjustment</h3>
+              <div className={styles.proposedRaise}>
+                <div className={styles.raiseInput}>
+                  <span className={styles.label}>Proposed Raise:</span>
+                  {isEditingRaise ? (
+                    <div className={styles.editingControls}>
+                      <input
+                        type="number"
+                        value={tempProposedRaise}
+                        onChange={(e) => {
+                          const newValue = Number(e.target.value);
+                          setTempProposedRaise(newValue);
+                          // Store in temporary storage for persistence
+                          TempFieldStorageService.storeTempChange(
+                            employee.employeeId || employee.id, 
+                            'proposedRaise', 
+                            newValue, 
+                            employee.proposedRaise || 0
+                          );
+                        }}
+                        className={styles.editInput}
+                        min="0"
+                        step="500"
+                      />
+                      <button onClick={handleProposedRaiseSave} className={styles.saveButton}>
+                        ✓
+                      </button>
+                      <button onClick={handleProposedRaiseCancel} className={styles.cancelButton}>
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={styles.displayValue} onClick={handleProposedRaiseEdit}>
+                      <span className={styles.value}>
+                        {formatCurrencyDisplay(employee.proposedRaise || 0)}
+                      </span>
+                      <span className={styles.editIcon}>✏️</span>
+                    </div>
+                  )}
+                </div>
+                
+                {(employee.proposedRaise || 0) > 0 && (
+                  <div className={styles.raiseCalculations}>
+                    <div className={styles.calculation}>
+                      <span className={styles.label}>New Salary:</span>
+                      <span className={styles.value}>
+                        {(() => {
+                          const originalCurrency = employee.currency || 'USD';
+                          const originalSalary = newSalary;
+                          
+                          // Calculate USD equivalent of new salary
+                          const newSalaryUSD = employee.currency !== 'USD' && employee.baseSalary && employee.baseSalaryUSD && employee.baseSalary > 0
+                            ? (originalSalary * (employee.baseSalaryUSD / employee.baseSalary))
+                            : originalSalary;
+                          
+                          // For non-USD employees, show original currency first, USD in parentheses
+                          if (originalCurrency !== 'USD') {
+                            return (
+                              <>
+                                {formatCurrencyDisplay(originalSalary, originalCurrency)}
+                                <div className={styles.originalCurrency}>
+                                  ({formatCurrencyDisplay(newSalaryUSD, 'USD')})
+                                </div>
+                              </>
+                            );
+                          }
+                          
+                          // For USD employees, just show USD
+                          return formatCurrencyDisplay(originalSalary, 'USD');
+                        })()}
+                      </span>
+                    </div>
+                    <div className={styles.calculation}>
+                      <span className={styles.label}>Percent Increase:</span>
+                      <span className={styles.value}>
+                        {EmployeeCalculations.formatPercentage(newSalaryPercent)}
+                      </span>
+                    </div>
+                    <div className={styles.calculation}>
+                      <span className={styles.label}>New Comparatio:</span>
+                      <span className={styles.value}>
+                        {newComparatio > 0 
+                          ? EmployeeCalculations.formatPercentage(newComparatio)
+                          : 'Not Available'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {adjustmentConsiderations.length > 0 && (
+                  <div className={styles.considerations}>
+                    <h4 className={styles.considerationsTitle}>Considerations</h4>
+                    <ul className={styles.considerationsList}>
+                      {adjustmentConsiderations.map((item, idx) => (
+                        <li key={idx} className={`${styles.considerationItem} ${styles[item.severity]}`}>
+                          <span className={styles.considerationIcon}>
+                            {item.severity === 'critical' ? '🚨' : item.severity === 'warning' ? '⚠️' : 'ℹ️'}
+                          </span>
+                          <span className={styles.considerationText}>{item.text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
             {/* 2. Performance & Impact Card */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>⭐ Performance & Impact</h3>
@@ -718,99 +869,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
               </div>
             </div>
 
-            {/* 6. Proposed Adjustment Card */}
-            <div className={styles.card}>
-              <h3 className={styles.cardTitle}>🎯 Proposed Adjustment</h3>
-              <div className={styles.proposedRaise}>
-                <div className={styles.raiseInput}>
-                  <span className={styles.label}>Proposed Raise:</span>
-                  {isEditingRaise ? (
-                    <div className={styles.editingControls}>
-                      <input
-                        type="number"
-                        value={tempProposedRaise}
-                        onChange={(e) => {
-                          const newValue = Number(e.target.value);
-                          setTempProposedRaise(newValue);
-                          // Store in temporary storage for persistence
-                          TempFieldStorageService.storeTempChange(
-                            employee.employeeId || employee.id, 
-                            'proposedRaise', 
-                            newValue, 
-                            employee.proposedRaise || 0
-                          );
-                        }}
-                        className={styles.editInput}
-                        min="0"
-                        step="500"
-                      />
-                      <button onClick={handleProposedRaiseSave} className={styles.saveButton}>
-                        ✓
-                      </button>
-                      <button onClick={handleProposedRaiseCancel} className={styles.cancelButton}>
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <div className={styles.displayValue} onClick={handleProposedRaiseEdit}>
-                      <span className={styles.value}>
-                        {formatCurrencyDisplay(employee.proposedRaise || 0)}
-                      </span>
-                      <span className={styles.editIcon}>✏️</span>
-                    </div>
-                  )}
-                </div>
-                
-                {(employee.proposedRaise || 0) > 0 && (
-                  <div className={styles.raiseCalculations}>
-                    <div className={styles.calculation}>
-                      <span className={styles.label}>New Salary:</span>
-                      <span className={styles.value}>
-                        {(() => {
-                          const originalCurrency = employee.currency || 'USD';
-                          const originalSalary = newSalary;
-                          
-                          // Calculate USD equivalent of new salary
-                          const newSalaryUSD = employee.currency !== 'USD' && employee.baseSalary && employee.baseSalaryUSD && employee.baseSalary > 0
-                            ? (originalSalary * (employee.baseSalaryUSD / employee.baseSalary))
-                            : originalSalary;
-                          
-                          // For non-USD employees, show original currency first, USD in parentheses
-                          if (originalCurrency !== 'USD') {
-                            return (
-                              <>
-                                {formatCurrencyDisplay(originalSalary, originalCurrency)}
-                                <div className={styles.originalCurrency}>
-                                  ({formatCurrencyDisplay(newSalaryUSD, 'USD')})
-                                </div>
-                              </>
-                            );
-                          }
-                          
-                          // For USD employees, just show USD
-                          return formatCurrencyDisplay(originalSalary, 'USD');
-                        })()}
-                      </span>
-                    </div>
-                    <div className={styles.calculation}>
-                      <span className={styles.label}>Percent Increase:</span>
-                      <span className={styles.value}>
-                        {EmployeeCalculations.formatPercentage(newSalaryPercent)}
-                      </span>
-                    </div>
-                    <div className={styles.calculation}>
-                      <span className={styles.label}>New Comparatio:</span>
-                      <span className={styles.value}>
-                        {newComparatio > 0 
-                          ? EmployeeCalculations.formatPercentage(newComparatio)
-                          : 'Not Available'
-                        }
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* 6. Proposed Adjustment Card (moved above; removed duplicate) */}
           </div>
         </div>
 

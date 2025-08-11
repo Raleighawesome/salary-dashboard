@@ -2,6 +2,7 @@
 import { DataJoiner, type JoinResult, type JoinOptions } from './dataJoiner';
 import { NameNormalizer } from '../utils/nameNormalizer';
 import { CurrencyConverter } from './currencyConverter';
+import { DataStorageService } from './dataStorage';
 import type { 
   FileUploadResult, 
   Employee, 
@@ -144,8 +145,34 @@ export class DataProcessor {
 
       // Store processed employees
       this.processedEmployees = employees;
-
-
+      
+      // Store in IndexedDB for persistence
+      if (employees.length > 0) {
+        await DataStorageService.saveEmployees(employees.map(emp => ({
+          employeeId: emp.employeeId,
+          email: emp.email,
+          name: emp.name,
+          country: emp.country,
+          currency: emp.currency,
+          baseSalary: emp.baseSalary,
+          baseSalaryUSD: emp.baseSalaryUSD,
+          comparatio: emp.comparatio,
+          timeInRole: emp.timeInRole,
+          performanceRating: typeof emp.performanceRating === 'string' ? 
+            parseFloat(emp.performanceRating) || undefined : emp.performanceRating,
+          retentionRisk: emp.retentionRisk,
+          proposedRaise: emp.proposedRaise,
+          newSalary: emp.newSalary,
+          percentChange: emp.percentChange,
+          businessImpactScore: emp.businessImpactScore,
+          salaryGradeMin: emp.salaryGradeMin,
+          salaryGradeMid: emp.salaryGradeMid,
+          salaryGradeMax: emp.salaryGradeMax,
+          hireDate: emp.hireDate,
+          roleStartDate: emp.roleStartDate,
+          lastRaiseDate: emp.lastRaiseDate,
+        })));
+      }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown processing error';

@@ -303,10 +303,13 @@ export class DataJoiner {
           baseSalaryUSD: salaryRow.baseSalary || 0,
           comparatio: 0,
           timeInRole: salaryRow.timeInRole || 0,
-          retentionRisk: 50, // Default medium risk
+          // Preserve performance-related fields if the salary file already contained them
+          performanceRating: (salaryRow as any).performanceRating,
+          retentionRisk: (salaryRow as any).retentionRisk ?? 50, // Default medium risk
           proposedRaise: 0,
           newSalary: salaryRow.baseSalary || 0,
           percentChange: 0,
+          businessImpactScore: (salaryRow as any).businessImpactScore,
           salaryGradeMin: salaryRow.salaryGradeMin,
           salaryGradeMid: salaryRow.salaryGradeMid,
           salaryGradeMax: salaryRow.salaryGradeMax,
@@ -317,9 +320,9 @@ export class DataJoiner {
           jobTitle: salaryRow.jobTitle,
           managerId: salaryRow.managerId,
           managerName: salaryRow.managerName,
-          futuretalent: undefined,
-          movementReadiness: undefined,
-          proposedTalentActions: undefined,
+          futuretalent: (salaryRow as any).futuretalent,
+          movementReadiness: (salaryRow as any).movementReadiness,
+          proposedTalentActions: (salaryRow as any).proposedTalentActions,
           salaryRangeSegment: salaryRow.salaryRangeSegment,
           belowRangeMinimum: salaryRow.belowRangeMinimum,
         };

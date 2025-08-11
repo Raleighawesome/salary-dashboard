@@ -5,6 +5,7 @@ import { BackupManager } from './components/BackupManager';
 import { DataProcessor } from './services/dataProcessor';
 import { DataStorageService } from './services/dataStorage';
 import { AutoBackupService, type BackupData } from './services/autoBackup';
+import { TempFieldStorageService } from './services/tempFieldStorage';
 import type { FileUploadResult, Employee } from './types/employee';
 import './App.css';
 
@@ -20,6 +21,20 @@ function App() {
   // Budget management state - moved from Dashboard to persist across views
   const [totalBudget, setTotalBudget] = useState<number>(0);
   const [budgetCurrency, setBudgetCurrency] = useState<string>('USD');
+
+  // Listen for temporary field changes and trigger backups
+  useEffect(() => {
+    const handleTempFieldChange = () => {
+      // Create backup when temporary fields change
+      AutoBackupService.scheduleBackup(processedEmployees, totalBudget, budgetCurrency);
+    };
+
+    window.addEventListener('tempFieldChanged', handleTempFieldChange);
+    
+    return () => {
+      window.removeEventListener('tempFieldChanged', handleTempFieldChange);
+    };
+  }, [processedEmployees, totalBudget, budgetCurrency]);
 
   // Session recovery on app load
   useEffect(() => {
@@ -41,6 +56,9 @@ function App() {
           }));
           
           setProcessedEmployees(convertedEmployees);
+          
+          // Restore any temporary field changes
+          TempFieldStorageService.restoreTempChanges();
           
           // Get session metadata if available
           const currentSession = await DataStorageService.getCurrentSession();
@@ -130,7 +148,10 @@ function App() {
       const processResult = await DataProcessor.processEmployeeData();
       setProcessedEmployees(processResult.employees);
       
-
+      // Create backup after successful data processing
+      if (processResult.employees.length > 0) {
+        AutoBackupService.createBackup(processResult.employees, totalBudget, budgetCurrency);
+      }
       
       // Auto-switch to dashboard view when we have data
       if (processResult.employees.length > 0) {
@@ -144,7 +165,7 @@ function App() {
       console.error('❌ Data processing failed:', error);
       setError(`Data processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }, []);
+  }, [totalBudget, budgetCurrency]);
 
   // Handle upload errors
   const handleUploadError = useCallback((errorMessage: string) => {
@@ -164,7 +185,7 @@ function App() {
   }, [clearError]);
 
   // Handle employee updates (for inline editing)
-  const handleEmployeeUpdate = useCallback((employeeId: string, updates: any) => {
+  const handleEmployeeUpdate = useCallback((employeeId: string, updates: Partial<Employee>) => {
     setProcessedEmployees(prev => {
       const updatedEmployees = prev.map(emp => 
         emp.employeeId === employeeId 
@@ -172,6 +193,8 @@ function App() {
           : emp
       );
       
+      // Create backup after updates
+      AutoBackupService.scheduleBackup(updatedEmployees, totalBudget, budgetCurrency);
       
       return updatedEmployees;
     });
@@ -183,7 +206,8 @@ function App() {
     setTotalBudget(budget);
     setBudgetCurrency(currency);
     
-    
+    // Create backup with updated budget information
+    AutoBackupService.scheduleBackup(processedEmployees, budget, currency);
 
   }, [processedEmployees]);
 
@@ -195,6 +219,7 @@ function App() {
       // Reset all services
       await DataStorageService.resetAllData();
       AutoBackupService.resetAllBackups();
+      TempFieldStorageService.clearAllTempChanges();
       
       // Reset component state
       setProcessedEmployees([]);

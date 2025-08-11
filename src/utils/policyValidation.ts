@@ -33,7 +33,7 @@ export class PolicyValidator {
       violations.push({
         type: 'COMPARATIO_TOO_LOW',
         severity: 'WARNING',
-        message: `Comparatio ${employee.comparatio.toFixed(1)}% is below floor of ${policies.comparatioFloor}%`,
+        message: `Comparatio ${employee.comparatio.toFixed(1)}% is below minimum of ${policies.comparatioFloor}%`,
         employeeId: employee.employeeId,
         currentValue: employee.comparatio,
         threshold: policies.comparatioFloor,

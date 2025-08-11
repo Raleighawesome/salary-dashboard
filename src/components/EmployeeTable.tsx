@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import styles from './EmployeeTable.module.css';
 import { ModernSelect } from './ModernSelect';
 import { PolicyValidator } from '../utils/policyValidation';
+import { TempFieldStorageService } from '../services/tempFieldStorage';
 
 interface EmployeeTableProps {
   employeeData: any[];
@@ -51,6 +52,28 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   const [tempRaiseValues, setTempRaiseValues] = useState<Record<string, string>>({});
   const [editingSalaryId, setEditingSalaryId] = useState<string | null>(null);
   const [tempSalaryValues, setTempSalaryValues] = useState<Record<string, string>>({});
+
+  // Restore temporary field values on component mount
+  useEffect(() => {
+    const tempChanges = TempFieldStorageService.getTempChanges();
+    const restoredRaiseValues: Record<string, string> = {};
+    const restoredSalaryValues: Record<string, string> = {};
+    
+    tempChanges.forEach(change => {
+      if (change.field === 'raisePercent') {
+        restoredRaiseValues[change.employeeId] = change.value;
+      } else if (change.field === 'baseSalary') {
+        restoredSalaryValues[change.employeeId] = change.value;
+      }
+    });
+    
+    if (Object.keys(restoredRaiseValues).length > 0) {
+      setTempRaiseValues(restoredRaiseValues);
+    }
+    if (Object.keys(restoredSalaryValues).length > 0) {
+      setTempSalaryValues(restoredSalaryValues);
+    }
+  }, []);
 
   // Format currency
   const formatCurrency = useCallback((amount: number): string => {
@@ -162,14 +185,22 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   }, [tempRaiseValues, employeeData]);
 
   const handleCancelEditing = useCallback(() => {
+    // Clear temporary storage for the employee being edited
+    if (editingEmployeeId) {
+      TempFieldStorageService.removeTempChange(editingEmployeeId, 'raisePercent');
+    }
     setEditingEmployeeId(null);
     setTempRaiseValues({});
-  }, []);
+  }, [editingEmployeeId]);
 
   const handleCancelSalaryEditing = useCallback(() => {
+    // Clear temporary storage for the employee being edited
+    if (editingSalaryId) {
+      TempFieldStorageService.removeTempChange(editingSalaryId, 'baseSalary');
+    }
     setEditingSalaryId(null);
     setTempSalaryValues({});
-  }, []);
+  }, [editingSalaryId]);
 
   const handleRaiseInputChange = useCallback((employeeId: string, value: string) => {
     // Allow empty string and valid numbers
@@ -178,8 +209,13 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
         ...tempRaiseValues, 
         [employeeId]: value 
       });
+      
+      // Store in temporary storage for persistence across refreshes
+      const currentEmployee = employeeData.find(emp => emp.employeeId === employeeId);
+      const originalRaisePercent = currentEmployee?.percentChange || 0;
+      TempFieldStorageService.storeTempChange(employeeId, 'raisePercent', value, originalRaisePercent);
     }
-  }, [tempRaiseValues]);
+  }, [tempRaiseValues, employeeData]);
 
   const handleSalaryInputChange = useCallback((employeeId: string, value: string) => {
     // Allow empty string and valid numbers (including decimals)
@@ -188,8 +224,13 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
         ...tempSalaryValues, 
         [employeeId]: value 
       });
+      
+      // Store in temporary storage for persistence across refreshes
+      const currentEmployee = employeeData.find(emp => emp.employeeId === employeeId);
+      const originalSalary = currentEmployee?.baseSalary || currentEmployee?.baseSalaryUSD || 0;
+      TempFieldStorageService.storeTempChange(employeeId, 'baseSalary', value, originalSalary);
     }
-  }, [tempSalaryValues]);
+  }, [tempSalaryValues, employeeData]);
 
   const handleSaveRaise = useCallback((employee: any) => {
     const newRaisePercentStr = tempRaiseValues[employee.employeeId] || '0';
@@ -209,6 +250,9 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
       newSalary: newSalary,
       percentChange: percentChange,
     });
+    
+    // Clear temporary storage for this field
+    TempFieldStorageService.removeTempChange(employee.employeeId, 'raisePercent');
     
     setEditingEmployeeId(null);
     setTempRaiseValues({});
@@ -260,6 +304,9 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
       baseSalaryUSD: newUSDSalary,
       comparatio: newComparatio,
     });
+    
+    // Clear temporary storage for this field
+    TempFieldStorageService.removeTempChange(employee.employeeId, 'baseSalary');
     
     setEditingSalaryId(null);
     setTempSalaryValues({});

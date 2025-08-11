@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { EmployeeCalculations } from '../utils/calculations';
+import { TempFieldStorageService } from '../services/tempFieldStorage';
 import styles from './EmployeeDetail.module.css';
 
 interface EmployeeDetailProps {
@@ -41,6 +42,18 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
   const [isEditingRaise, setIsEditingRaise] = useState(false);
   const [tempProposedRaise, setTempProposedRaise] = useState(employee.proposedRaise || 0);
   const [aiRecommendationApplied, setAiRecommendationApplied] = useState(false);
+
+  // Restore temporary values for this employee on mount
+  useEffect(() => {
+    const tempValue = TempFieldStorageService.getFieldValue(
+      employee.employeeId || employee.id, 
+      'proposedRaise', 
+      employee.proposedRaise || 0
+    );
+    if (tempValue !== (employee.proposedRaise || 0)) {
+      setTempProposedRaise(tempValue);
+    }
+  }, [employee.employeeId, employee.id, employee.proposedRaise]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -177,13 +190,17 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
 
   const handleProposedRaiseSave = useCallback(() => {
     onEmployeeUpdate(employee.employeeId || employee.id, { proposedRaise: tempProposedRaise });
+    // Clear temporary storage since the change has been saved
+    TempFieldStorageService.removeTempChange(employee.employeeId || employee.id, 'proposedRaise');
     setIsEditingRaise(false);
   }, [employee.employeeId, employee.id, tempProposedRaise, onEmployeeUpdate]);
 
   const handleProposedRaiseCancel = useCallback(() => {
     setTempProposedRaise(employee.proposedRaise || 0);
+    // Clear temporary storage since changes are being cancelled
+    TempFieldStorageService.removeTempChange(employee.employeeId || employee.id, 'proposedRaise');
     setIsEditingRaise(false);
-  }, [employee.proposedRaise]);
+  }, [employee.proposedRaise, employee.employeeId, employee.id]);
 
   // Handle applying AI recommendation
   const handleApplyAIRecommendation = useCallback(() => {
@@ -712,7 +729,17 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                       <input
                         type="number"
                         value={tempProposedRaise}
-                        onChange={(e) => setTempProposedRaise(Number(e.target.value))}
+                        onChange={(e) => {
+                          const newValue = Number(e.target.value);
+                          setTempProposedRaise(newValue);
+                          // Store in temporary storage for persistence
+                          TempFieldStorageService.storeTempChange(
+                            employee.employeeId || employee.id, 
+                            'proposedRaise', 
+                            newValue, 
+                            employee.proposedRaise || 0
+                          );
+                        }}
                         className={styles.editInput}
                         min="0"
                         step="500"
@@ -739,7 +766,30 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                     <div className={styles.calculation}>
                       <span className={styles.label}>New Salary:</span>
                       <span className={styles.value}>
-                        {formatCurrencyDisplay(newSalary)}
+                        {(() => {
+                          const originalCurrency = employee.currency || 'USD';
+                          const originalSalary = newSalary;
+                          
+                          // Calculate USD equivalent of new salary
+                          const newSalaryUSD = employee.currency !== 'USD' && employee.baseSalary && employee.baseSalaryUSD && employee.baseSalary > 0
+                            ? (originalSalary * (employee.baseSalaryUSD / employee.baseSalary))
+                            : originalSalary;
+                          
+                          // For non-USD employees, show original currency first, USD in parentheses
+                          if (originalCurrency !== 'USD') {
+                            return (
+                              <>
+                                {formatCurrencyDisplay(originalSalary, originalCurrency)}
+                                <div className={styles.originalCurrency}>
+                                  ({formatCurrencyDisplay(newSalaryUSD, 'USD')})
+                                </div>
+                              </>
+                            );
+                          }
+                          
+                          // For USD employees, just show USD
+                          return formatCurrencyDisplay(originalSalary, 'USD');
+                        })()}
                       </span>
                     </div>
                     <div className={styles.calculation}>

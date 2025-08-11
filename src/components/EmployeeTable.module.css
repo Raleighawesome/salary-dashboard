@@ -467,6 +467,11 @@
   color: #64748b;
 }
 
+.badge.raisePill {
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
 /* Details Button */
 .detailsButton {
   padding: 0.5rem 1rem;
@@ -506,6 +511,13 @@
   margin-left: 0.5rem;
   font-size: 0.875rem;
   cursor: help;
+}
+
+.considerationIndicator {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  cursor: help;
+  opacity: 1;
 }
 
 /* Inline Editing Styles */

@@ -3,6 +3,7 @@ import styles from './EmployeeTable.module.css';
 import { ModernSelect } from './ModernSelect';
 import { PolicyValidator } from '../utils/policyValidation';
 import { TempFieldStorageService } from '../services/tempFieldStorage';
+import { EmployeeCalculations } from '../utils/calculations';
 
 interface EmployeeTableProps {
   employeeData: any[];
@@ -349,6 +350,80 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
     return violations;
   }, [totalBudget, currentBudgetUsage, employeeData.length]);
 
+  // Get adjustment considerations for an employee (matching EmployeeDetail logic)
+  const getAdjustmentConsiderations = useCallback((employee: any) => {
+    const items: { text: string; severity: 'critical' | 'warning' | 'info' }[] = [];
+    
+    try {
+      // Enhanced data extraction with comprehensive field name fallbacks (from EmployeeDetail)
+      const extractFieldValue = (fieldNames: string[], defaultValue: any = null) => {
+        for (const fieldName of fieldNames) {
+          const value = employee[fieldName];
+          if (value !== undefined && value !== null && value !== '') {
+            return value;
+          }
+        }
+        return defaultValue;
+      };
+
+      // Calculate tenure information using EmployeeCalculations
+      const tenureInfo = EmployeeCalculations.calculateTenure(
+        extractFieldValue([
+          'Latest Hire Date', 'hireDate', 'hire_date', 'start_date',
+          'Hire Date', 'Start Date'
+        ]),
+        extractFieldValue([
+          'Job Entry Start Date', 'roleStartDate', 'role_start_date', 'current_role_start',
+          'Role Start Date', 'Current Role Start'
+        ]),
+        extractFieldValue([
+          'lastRaiseDate', 'last_raise_date', 'last_increase_date',
+          'Last Raise Date', 'Last Salary Change Date', 'Last salary change date'
+        ])
+      );
+
+      // Current comparatio
+      const currentComparatio = employee.comparatio || 0;
+      
+      // 1) Below minimum (<76% comparatio)
+      if (currentComparatio > 0 && currentComparatio < 76) {
+        items.push({ text: 'Below minimum range (<76% compa-ratio)', severity: 'critical' });
+      } else if (currentComparatio > 0 && currentComparatio < 85) {
+        // 2) <85% comp ratio (only if not already flagged as <76%)
+        items.push({ text: '<85% compa-ratio', severity: 'warning' });
+      }
+      
+      // 3) and 4) No merit increase in > 24 months or > 18 months
+      const lastRaiseMonthsAgo = tenureInfo?.lastRaiseMonthsAgo || 0;
+      if (lastRaiseMonthsAgo > 24) {
+        items.push({ text: 'No merit increase in > 24 months', severity: 'warning' });
+      } else if (lastRaiseMonthsAgo > 18) {
+        items.push({ text: 'No merit increase in > 18 months', severity: 'info' });
+      }
+      
+      // 5) Segment 1 in role > 24 months, if no performance issues
+      const isSegment1 = (() => {
+        const seg = (employee.salaryRangeSegment || '').toString().toLowerCase();
+        return seg === 'segment 1' || seg === '1' || seg.includes('segment 1');
+      })();
+      const timeInRoleMonths = tenureInfo?.timeInRoleMonths || 0;
+      const derivedRating = employee.performanceRating ||
+        employee['CALIBRATED VALUE: Overall Performance Rating'] ||
+        employee['calibrated value: overall performance rating'] ||
+        '';
+      const perfClass = getPerformanceBadge(derivedRating).className;
+      const hasPerformanceIssues = perfClass === 'poor' || perfClass === 'critical';
+      
+      if (isSegment1 && timeInRoleMonths > 24 && !hasPerformanceIssues) {
+        items.push({ text: 'Segment 1, >24 months in role, no performance issues', severity: 'info' });
+      }
+    } catch (error) {
+      console.error('Error calculating adjustment considerations:', error);
+    }
+    
+    return items;
+  }, [getPerformanceBadge]);
+
   // Calculate real-time values for display
   const calculateRealTimeValues = useCallback((employee: any) => {
     // Use USD for display calculations
@@ -592,12 +667,6 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
               <th>Job Title</th>
               <th 
                 className={styles.sortableHeader}
-                onClick={() => handleSort('managerName')}
-              >
-                Manager {getSortIcon('managerName')}
-              </th>
-              <th 
-                className={styles.sortableHeader}
                 onClick={() => handleSort('baseSalaryUSD')}
               >
                 Current Salary {getSortIcon('baseSalaryUSD')}
@@ -622,8 +691,6 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
               </th>
               <th>New Salary</th>
               <th>New Comparatio</th>
-              <th>% Change</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -631,6 +698,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
               const performanceBadge = getPerformanceBadge(employee.performanceRating);
               const violations = getEmployeeViolations(employee);
               const violationColor = PolicyValidator.getViolationColor(violations);
+              const considerations = getAdjustmentConsiderations(employee);
               const realTimeValues = calculateRealTimeValues(employee);
               const isEditing = editingEmployeeId === employee.employeeId;
               const currentRaiseValue = isEditing 
@@ -656,12 +724,20 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                         title="Click to view employee details"
                       >
                         {employee.name || 'Unknown'}
+                        {considerations.length > 0 && (
+                          <span 
+                            className={styles.considerationIndicator} 
+                            title={considerations.map(c => `- ${c.text}`).join('\n')}
+                          >
+                            ⚠️
+                          </span>
+                        )}
                         {hasProposedRaise ? (
                           <span className={styles.violationIndicator} title="Proposed salary adjustment">
                             ✅
                           </span>
-                        ) : violations.length > 0 && (
-                          <span className={styles.violationIndicator} title={PolicyValidator.formatViolationMessage(violations)}>
+                        ) : violations.filter(v => v.type !== 'COMPARATIO_TOO_LOW').length > 0 && (
+                          <span className={styles.violationIndicator} title={PolicyValidator.formatViolationMessage(violations.filter(v => v.type !== 'COMPARATIO_TOO_LOW'))}>
                             {violationColor === 'error' ? '🚫' : '⚠️'}
                           </span>
                         )}
@@ -672,7 +748,6 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                     </div>
                   </td>
                   <td>{employee.jobTitle || 'N/A'}</td>
-                  <td>{employee.managerName || 'N/A'}</td>
                   <td className={styles.salaryCell}>
                     {editingSalaryId === employee.employeeId ? (
                       <div className={styles.editingSalary}>
@@ -778,9 +853,12 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                       <div className={styles.raiseInfo} onClick={() => handleStartEditing(employee.employeeId, employee.proposedRaise || 0)}>
                         {employee.proposedRaise > 0 ? (
                           <>
-                            <div className={styles.raisePercent}>
+                            <span className={`${styles.badge} ${styles.raisePill} ${
+                              realTimeValues.percentChange > 10 ? styles.high :
+                              realTimeValues.percentChange > 5 ? styles.medium : styles.good
+                            }`}>
                               {formatPercentage(realTimeValues.percentChange)}
-                            </div>
+                            </span>
                             <div className={styles.raiseAmount}>
                               ({formatCurrency(employee.proposedRaise)})
                             </div>
@@ -833,26 +911,6 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                     ) : (
                       <span className={styles.noChange}>-</span>
                     )}
-                  </td>
-                  <td className={styles.percentChangeCell}>
-                    {realTimeValues.percentChange > 0 ? (
-                      <span className={`${styles.percentBadge} ${
-                        realTimeValues.percentChange > 10 ? styles.high :
-                        realTimeValues.percentChange > 5 ? styles.medium : styles.low
-                      }`}>
-                        +{formatPercentage(realTimeValues.percentChange)}
-                      </span>
-                    ) : (
-                      <span className={styles.noChange}>0%</span>
-                    )}
-                  </td>
-                  <td>
-                    <button
-                      className={styles.detailsButton}
-                      onClick={() => onEmployeeSelect(employee)}
-                    >
-                      View Details
-                    </button>
                   </td>
                 </tr>
               );

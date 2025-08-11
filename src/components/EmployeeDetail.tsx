@@ -772,7 +772,59 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                 )}
               </div>
             </div>
-            {/* 2. Performance & Impact Card */}
+            {/* 2. Salary Grade Range Card */}
+            <div className={styles.card}>
+              <h3 className={styles.cardTitle}>📊 Salary Grade Range</h3>
+              <div className={styles.salaryRange}>
+                <div className={styles.rangeBar}>
+                  <div className={styles.rangeLabels}>
+                    <span>Min</span>
+                    <span>Midpoint</span>
+                    <span>Max</span>
+                  </div>
+                  <div className={styles.rangeVisual}>
+                    <div className={styles.rangeTrack}>
+                      <div 
+                        className={styles.currentPosition}
+                        style={{
+                          left: `${Math.max(0, Math.min(100, 
+                            ((analysis.salaryAnalysis.currentSalary - analysis.salaryAnalysis.salaryGradeMin) / 
+                            (analysis.salaryAnalysis.salaryGradeMax - analysis.salaryAnalysis.salaryGradeMin)) * 100
+                          ))}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.rangeValues}>
+                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMin)}</span>
+                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMid)}</span>
+                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMax)}</span>
+                  </div>
+                </div>
+                <div className={styles.rangeDetails}>
+                  <div className={styles.rangeDetail}>
+                    <span className={styles.label}>Position in Range:</span>
+                    <span className={`${styles.value} ${styles[analysis.salaryAnalysis.positionInRange.toLowerCase().replace(' ', '')]}`}>
+                      {analysis.salaryAnalysis.positionInRange}
+                    </span>
+                  </div>
+                  <div className={styles.rangeDetail}>
+                    <span className={styles.label}>Segment:</span>
+                    <span className={styles.value}>
+                      {employee.salaryRangeSegment || 'Not Available'}
+                    </span>
+                  </div>
+                  <div className={styles.rangeDetail}>
+                    <span className={styles.label}>Room for Growth:</span>
+                    <span className={styles.value}>
+                      {formatCurrencyDisplay(analysis.salaryAnalysis.roomForGrowth)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Performance & Impact Card */}
             <div className={styles.card}>
               <h3 className={styles.cardTitle}>⭐ Performance & Impact</h3>
               <div className={styles.performanceInfo}>
@@ -835,58 +887,6 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                   </details>
                 </div>
               )}
-            </div>
-
-            {/* 4. Salary Grade Range Card */}
-            <div className={styles.card}>
-              <h3 className={styles.cardTitle}>📊 Salary Grade Range</h3>
-              <div className={styles.salaryRange}>
-                <div className={styles.rangeBar}>
-                  <div className={styles.rangeLabels}>
-                    <span>Min</span>
-                    <span>Midpoint</span>
-                    <span>Max</span>
-                  </div>
-                  <div className={styles.rangeVisual}>
-                    <div className={styles.rangeTrack}>
-                      <div 
-                        className={styles.currentPosition}
-                        style={{
-                          left: `${Math.max(0, Math.min(100, 
-                            ((analysis.salaryAnalysis.currentSalary - analysis.salaryAnalysis.salaryGradeMin) / 
-                            (analysis.salaryAnalysis.salaryGradeMax - analysis.salaryAnalysis.salaryGradeMin)) * 100
-                          ))}%`
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className={styles.rangeValues}>
-                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMin)}</span>
-                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMid)}</span>
-                    <span>{formatCurrencyDisplay(analysis.salaryAnalysis.salaryGradeMax)}</span>
-                  </div>
-                </div>
-                <div className={styles.rangeDetails}>
-                  <div className={styles.rangeDetail}>
-                    <span className={styles.label}>Position in Range:</span>
-                    <span className={`${styles.value} ${styles[analysis.salaryAnalysis.positionInRange.toLowerCase().replace(' ', '')]}`}>
-                      {analysis.salaryAnalysis.positionInRange}
-                    </span>
-                  </div>
-                  <div className={styles.rangeDetail}>
-                    <span className={styles.label}>Segment:</span>
-                    <span className={styles.value}>
-                      {employee.salaryRangeSegment || 'Not Available'}
-                    </span>
-                  </div>
-                  <div className={styles.rangeDetail}>
-                    <span className={styles.label}>Room for Growth:</span>
-                    <span className={styles.value}>
-                      {formatCurrencyDisplay(analysis.salaryAnalysis.roomForGrowth)}
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* 6. Proposed Adjustment Card (moved above; removed duplicate) */}

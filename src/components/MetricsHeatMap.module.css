@@ -15,17 +15,18 @@
   --heat-red-green-9: #15803d;   /* Excellent - dark green */
   --heat-red-green-10: #065f46;  /* Highest/best - darkest green */
 
-  /* Green-Red Scale (for comparatio, retention risk) */
-  --heat-green-red-1: #065f46;
-  --heat-green-red-2: #047857;
-  --heat-green-red-3: #059669;
-  --heat-green-red-4: #10b981;
-  --heat-green-red-5: #34d399;
-  --heat-green-red-6: #6ee7b7;
-  --heat-green-red-7: #9decf9;
-  --heat-green-red-8: #fecaca;
-  --heat-green-red-9: #f87171;
-  --heat-green-red-10: #dc2626;
+  /* Green-Red Scale (for retention risk) */
+  /* Low values = Green (good), High values = Red (bad) */
+  --heat-green-red-1: #dc2626;   /* Highest risk - dark red */
+  --heat-green-red-2: #ef4444;   /* Very high risk - red */
+  --heat-green-red-3: #f87171;   /* High risk - medium red */
+  --heat-green-red-4: #fecaca;   /* Above average risk - light red */
+  --heat-green-red-5: #fbbf24;   /* Average risk - yellow */
+  --heat-green-red-6: #84cc16;   /* Below average risk - light green */
+  --heat-green-red-7: #22c55e;   /* Low risk - medium green */
+  --heat-green-red-8: #16a34a;   /* Very low risk - green */
+  --heat-green-red-9: #15803d;   /* Excellent - dark green */
+  --heat-green-red-10: #065f46;  /* Lowest risk - darkest green */
 
   /* Blue-Orange Scale (for time in role) */
   --heat-blue-orange-1: #eff6ff;

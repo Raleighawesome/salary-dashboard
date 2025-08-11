@@ -52,7 +52,7 @@ const METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     label: 'Time in Role',
     description: 'Months in current position',
     unit: 'mo',
-    colorScale: 'blue-orange',
+    colorScale: 'red-green',
     thresholds: { excellent: 36, good: 24, fair: 12, poor: 6 },
   },
   retentionRisk: {

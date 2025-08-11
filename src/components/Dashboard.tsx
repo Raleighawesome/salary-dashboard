@@ -9,6 +9,7 @@ import PolicyViolationAlert from './PolicyViolationAlert';
 import { CSVExporter } from '../services/csvExporter';
 import { PolicyValidator } from '../utils/policyValidation';
 import styles from './Dashboard.module.css';
+import { EmployeeCalculations } from '../utils/calculations';
 
 interface DashboardProps {
   employeeData: any[]; // Will be properly typed when we have the Employee interface
@@ -79,19 +80,54 @@ export const Dashboard: React.FC<DashboardProps> = ({
           // Process performance rating (can be number or string)
           let performanceRating = 0;
           if (emp.performanceRating !== undefined && emp.performanceRating !== null && emp.performanceRating !== '') {
-            const perfRating = typeof emp.performanceRating === 'string' ? parseFloat(emp.performanceRating) : emp.performanceRating;
-            if (!isNaN(perfRating) && isFinite(perfRating) && perfRating >= 0) {
-              performanceRating = perfRating;
+            if (typeof emp.performanceRating === 'number') {
+              performanceRating = isFinite(emp.performanceRating) ? emp.performanceRating : 0;
+            } else if (typeof emp.performanceRating === 'string') {
+              const ratingLower = emp.performanceRating.toLowerCase();
+              if (ratingLower.includes('high') || ratingLower.includes('excellent') || ratingLower.includes('impact')) {
+                performanceRating = 5.0;
+              } else if (ratingLower.includes('successful') || ratingLower.includes('good') || ratingLower.includes('meets')) {
+                performanceRating = 4.0;
+              } else if (ratingLower.includes('developing') || ratingLower.includes('fair') || ratingLower.includes('partial')) {
+                performanceRating = 3.0;
+              } else if (ratingLower.includes('evolving')) {
+                performanceRating = 2.5;
+              } else if (ratingLower.includes('poor') || ratingLower.includes('below') || ratingLower.includes('needs')) {
+                performanceRating = 2.0;
+              } else {
+                // Fallback: attempt numeric parse; otherwise neutral default
+                const parsed = parseFloat(emp.performanceRating);
+                performanceRating = !isNaN(parsed) && isFinite(parsed) ? parsed : 3.5;
+              }
+            }
+          } else {
+            // Try alternate fields from uploads if primary is missing
+            const altPerf = emp['CALIBRATED VALUE: Overall Performance Rating'] || emp['calibrated value: overall performance rating'];
+            if (altPerf) {
+              const ratingLower = String(altPerf).toLowerCase();
+              if (ratingLower.includes('high') || ratingLower.includes('excellent') || ratingLower.includes('impact')) performanceRating = 5.0;
+              else if (ratingLower.includes('successful') || ratingLower.includes('good') || ratingLower.includes('meets')) performanceRating = 4.0;
+              else if (ratingLower.includes('developing') || ratingLower.includes('fair') || ratingLower.includes('partial')) performanceRating = 3.0;
+              else if (ratingLower.includes('evolving')) performanceRating = 2.5;
+              else if (ratingLower.includes('poor') || ratingLower.includes('below') || ratingLower.includes('needs')) performanceRating = 2.0;
             }
           }
 
-          // Process time in role (ensure it's a valid number)
+          // Process time in role (ensure it's a valid number); derive if missing
           let timeInRole = 0;
-          if (emp.timeInRole !== undefined && emp.timeInRole !== null) {
+          if (emp.timeInRole !== undefined && emp.timeInRole !== null && emp.timeInRole !== '') {
             const timeValue = typeof emp.timeInRole === 'string' ? parseFloat(emp.timeInRole) : emp.timeInRole;
             if (!isNaN(timeValue) && isFinite(timeValue) && timeValue >= 0) {
               timeInRole = timeValue;
             }
+          }
+          if (timeInRole === 0) {
+            // Derive using robust date parsing used elsewhere
+            const hireDate = emp['Latest Hire Date'] || emp.hireDate || emp['hire_date'] || emp['start_date'] || emp['Hire Date'] || emp['Start Date'];
+            const roleStartDate = emp['Job Entry Start Date'] || emp.roleStartDate || emp['role_start_date'] || emp['current_role_start'] || emp['Role Start Date'] || emp['Current Role Start'];
+            const lastRaiseDate = emp['lastRaiseDate'] || emp['last_raise_date'] || emp['last_increase_date'] || emp['Last Raise Date'] || emp['Last Salary Change Date'];
+            const tenureInfo = EmployeeCalculations.calculateTenure(hireDate, roleStartDate, lastRaiseDate);
+            timeInRole = tenureInfo.timeInRoleMonths;
           }
 
           return {

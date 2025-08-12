@@ -332,7 +332,7 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     // 1) Below minimum (<76% comparatio)
     if (currentComparatio > 0 && currentComparatio < 76) {
       items.push({ text: 'Below minimum range (<76% compa-ratio)', severity: 'critical' });
-    } else if (currentComparatio > 0 && currentComparatio < 85) {
+    } else if (currentComparatio > 0 && currentComparatio <= 84) {
       // 2) <85% comp ratio (only if not already flagged as <76%)
       items.push({ text: '<85% compa-ratio', severity: 'warning' });
     }

@@ -28,6 +28,30 @@ export class PolicyValidator {
   ): PolicyViolation[] {
     const violations: PolicyViolation[] = [];
 
+    // Derive a robust employee display name from many possible fields
+    const deriveEmployeeName = (emp: any): string => {
+      const directName = emp?.name || emp?.Name || emp?.employeeName || emp?.EmployeeName;
+      if (directName && typeof directName === 'string' && directName.trim()) return directName.trim();
+
+      const preferred = emp?.['Preferred Name'] || emp?.['preferred name'];
+      if (preferred && typeof preferred === 'string' && preferred.trim()) return preferred.trim();
+
+      const worker = emp?.['Worker'] || emp?.['worker'];
+      if (worker && typeof worker === 'string' && worker.trim()) return worker.trim();
+
+      const first = emp?.firstName || emp?.['First Name'] || emp?.firstname;
+      const last = emp?.lastName || emp?.['Last Name'] || emp?.lastname;
+      const combined = [first, last].filter(Boolean).join(' ').trim();
+      if (combined) return combined;
+
+      const email = emp?.email || emp?.['Email'] || '';
+      if (email) return email;
+
+      return emp?.employeeId || '';
+    };
+
+    const employeeName = deriveEmployeeName(employee);
+
     // Check comparatio floor
     if (employee.comparatio && employee.comparatio < policies.comparatioFloor) {
       violations.push({
@@ -35,6 +59,7 @@ export class PolicyValidator {
         severity: 'WARNING',
         message: `Comparatio ${employee.comparatio.toFixed(1)}% is below minimum of ${policies.comparatioFloor}%`,
         employeeId: employee.employeeId,
+        employeeName,
         currentValue: employee.comparatio,
         threshold: policies.comparatioFloor,
       });
@@ -53,6 +78,7 @@ export class PolicyValidator {
           severity: 'ERROR',
           message: `Proposed raise ${raisePercent.toFixed(1)}% exceeds maximum of ${maxRaise}%`,
           employeeId: employee.employeeId,
+          employeeName,
           currentValue: raisePercent,
           threshold: maxRaise,
         });
@@ -67,6 +93,7 @@ export class PolicyValidator {
           severity: 'WARNING',
           message: `Employee has been in role for ${employee.timeInRole} months without a raise`,
           employeeId: employee.employeeId,
+          employeeName,
           currentValue: employee.timeInRole,
           threshold: policies.noRaiseThresholdMonths,
         });

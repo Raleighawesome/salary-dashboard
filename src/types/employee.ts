@@ -79,6 +79,7 @@ export interface PolicyViolation {
   severity: 'WARNING' | 'ERROR';
   message: string;
   employeeId?: string;
+  employeeName?: string;
   currentValue?: number;
   threshold?: number;
 }

@@ -175,9 +175,11 @@ export const PolicyViolationAlert: React.FC<PolicyViolationAlertProps> = ({
                   {violationSummary.criticalViolations.map((violation, index) => (
                     <div key={index} className={`${styles.violationItem} ${getSeverityClass(violation.severity)}`}>
                       <div className={styles.violationHeader}>
-                        <span className={styles.violationType}>{violation.type.replace(/_/g, ' ')}</span>
-                        {violation.employeeId && (
-                          <span className={styles.employeeId}>Employee: {violation.employeeId}</span>
+                         <span className={styles.violationType}>{violation.type.replace(/_/g, ' ')}</span>
+                        {(violation.employeeName || violation.employeeId) && (
+                          <span className={styles.employeeId}>
+                            Employee: {violation.employeeName || violation.employeeId}
+                          </span>
                         )}
                       </div>
                       <div className={styles.violationMessage}>{violation.message}</div>
@@ -200,9 +202,11 @@ export const PolicyViolationAlert: React.FC<PolicyViolationAlertProps> = ({
                   {violationSummary.warningViolations.map((violation, index) => (
                     <div key={index} className={`${styles.violationItem} ${getSeverityClass(violation.severity)}`}>
                       <div className={styles.violationHeader}>
-                        <span className={styles.violationType}>{violation.type.replace(/_/g, ' ')}</span>
-                        {violation.employeeId && (
-                          <span className={styles.employeeId}>Employee: {violation.employeeId}</span>
+                         <span className={styles.violationType}>{violation.type.replace(/_/g, ' ')}</span>
+                        {(violation.employeeName || violation.employeeId) && (
+                          <span className={styles.employeeId}>
+                            Employee: {violation.employeeName || violation.employeeId}
+                          </span>
                         )}
                       </div>
                       <div className={styles.violationMessage}>{violation.message}</div>

@@ -322,6 +322,24 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
     return Math.round((newSalaryOriginal / salaryGradeMid) * 100);
   }, [employee.proposedRaise, employee.baseSalary, employee.baseSalaryUSD, employee.salaryGradeMid, analysis.salaryAnalysis.salaryGradeMid]);
 
+  // Calculate new segment based on new comparatio after proposed raise
+  const newSegment = useMemo(() => {
+    const proposedRaise = employee.proposedRaise || 0;
+    if (proposedRaise <= 0) return null;
+    
+    // Use the already calculated newComparatio
+    if (newComparatio <= 0) return null;
+    
+    // Determine segment based on comparatio ranges
+    if (newComparatio < 90) {
+      return 'Segment 1';
+    } else if (newComparatio <= 110) {
+      return 'Segment 2';
+    } else {
+      return 'Segment 3';
+    }
+  }, [newComparatio]);
+
   // Proposed Adjustment Considerations (conditional line items requested)
   const adjustmentConsiderations = useMemo(() => {
     const items: { text: string; severity: 'critical' | 'warning' | 'info' }[] = [];
@@ -752,6 +770,19 @@ export const EmployeeDetail: React.FC<EmployeeDetailProps> = ({
                         }
                       </span>
                     </div>
+                    {newSegment && (
+                      <div className={styles.calculation}>
+                        <span className={styles.label}>New Segment:</span>
+                        <span className={styles.value}>
+                          {newSegment}
+                          {newSegment !== employee.salaryRangeSegment && employee.salaryRangeSegment && (
+                            <span className={styles.segmentChange}>
+                              {' '}(from {employee.salaryRangeSegment})
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
 

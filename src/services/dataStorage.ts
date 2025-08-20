@@ -60,7 +60,7 @@ export interface PolicySettings {
   id?: number;
   comparatioFloor: number; // 74%
   maxRaisePercentUS: number; // 12%
-  maxRaisePercentIndia: number; // 10%
+  maxRaisePercentIndia: number; // 35%
   noRaiseThresholdMonths: number; // 18 months
   lastUpdated: number;
 }
@@ -409,7 +409,7 @@ export class DataStorageService {
       await db.policies.add({
         comparatioFloor: 76,
         maxRaisePercentUS: 12,
-        maxRaisePercentIndia: 10,
+        maxRaisePercentIndia: 35,
         noRaiseThresholdMonths: 18,
         lastUpdated: Date.now(),
       });
@@ -421,7 +421,7 @@ export class DataStorageService {
     return policy || {
       comparatioFloor: 76,
       maxRaisePercentUS: 12,
-      maxRaisePercentIndia: 10,
+      maxRaisePercentIndia: 35,
       noRaiseThresholdMonths: 18,
       lastUpdated: Date.now(),
     };

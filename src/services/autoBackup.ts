@@ -93,30 +93,34 @@ export class AutoBackupService {
 
   /**
    * Update backup file in public directory
+   * NOTE: This method is disabled to prevent unwanted download dialogs.
+   * Backups are only stored in localStorage for session recovery.
+   * Users can manually export backups via the BackupManager component.
    */
   private static async updatePublicBackupFile(backupData: BackupData): Promise<void> {
     try {
-      // In a browser environment, we can't directly write to the file system
-      // Instead, we'll use the File System Access API if available, or provide instructions
-      if ('showSaveFilePicker' in window) {
-        // Use File System Access API (Chrome/Edge)
-        await this.saveWithFileSystemAPI(backupData);
-      } else {
-        // Fallback: Save to a predictable location that can be manually copied
-        await this.saveBackupForManualUpdate(backupData);
-      }
+      // DISABLED: Automatic file system access to prevent unwanted download dialogs
+      // The File System Access API was causing save dialogs to appear every time
+      // a salary proposal was made, which is disruptive to the user experience.
+      
+      // Only use the non-intrusive fallback method that doesn't trigger downloads
+      await this.saveBackupForManualUpdate(backupData);
+      
     } catch (error) {
       console.error('❌ Public backup file update failed:', error);
-      // Fallback to localStorage only
+      // Fallback to localStorage only - this is actually preferred behavior
     }
   }
 
   /**
    * Save using File System Access API (Chrome/Edge)
+   * NOTE: This method is no longer called automatically to prevent unwanted download dialogs.
+   * It can be used manually by the BackupManager component when user explicitly requests export.
    */
   private static async saveWithFileSystemAPI(backupData: BackupData): Promise<void> {
     try {
       // Note: This requires user permission and only works in secure contexts
+      // This method shows a save dialog, so it should only be called when user explicitly requests it
       const fileHandle = await (window as any).showSaveFilePicker({
         suggestedName: 'salary_dashboard_backup.json',
         types: [{
@@ -129,9 +133,10 @@ export class AutoBackupService {
       await writable.write(JSON.stringify(backupData, null, 2));
       await writable.close();
       
+      console.log('✅ Backup file saved successfully via File System Access API');
 
     } catch (error) {
-
+      console.error('❌ File System Access API save failed:', error);
       throw error;
     }
   }
